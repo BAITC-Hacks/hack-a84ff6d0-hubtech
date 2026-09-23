@@ -7,12 +7,41 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+from fastapi.testclient import TestClient
 from tests.process_utils import NO_WINDOW, terminate_owned_process
 
 
 class RequestLoggingTests(unittest.TestCase):
+    def test_internal_exception_is_handled_before_asgi_server_logs_its_contents(self):
+        from app.main import app
+        from app.security import current_session
+
+        def session():
+            return {"user": {"id": "log-test", "role": "manager"}}
+
+        marker = "private-sale-details-must-not-be-logged"
+        previous = dict(app.dependency_overrides)
+        app.dependency_overrides[current_session] = session
+        try:
+            # No lifespan is needed: the failing repository is replaced and
+            # the test must not touch the workstation's database.
+            with patch("app.api.routes.repo.list_orders", side_effect=RuntimeError(marker)):
+                with self.assertLogs("umytpa", level="INFO") as captured:
+                    response = TestClient(app, raise_server_exceptions=True).get(
+                        "/api/orders", headers={"X-Request-ID": "safe-error-test"})
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(response.headers["X-Request-ID"], "safe-error-test")
+            self.assertNotIn(marker, response.text)
+            self.assertNotIn(marker, "\n".join(captured.output))
+            self.assertIn("error_type=RuntimeError", "\n".join(captured.output))
+            self.assertIn("route=/api/orders status=500", "\n".join(captured.output))
+        finally:
+            app.dependency_overrides.clear()
+            app.dependency_overrides.update(previous)
+
     def test_info_request_log_is_emitted_without_uvicorn_access_log(self):
         with tempfile.TemporaryDirectory() as folder:
             with socket.socket() as listener:

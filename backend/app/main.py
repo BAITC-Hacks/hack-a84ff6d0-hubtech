@@ -57,11 +57,10 @@ async def response_headers(request: Request, call_next):
     logger = logging.getLogger("umytpa.requests")
     try:
         response = await call_next(request)
-    except Exception:
-        logger.error("request_id=%s method=%s route=%s status=500 duration_ms=%d",
-                     request_id, request.method, getattr(request.scope.get("route"), "path", "unmatched"),
-                     (time.monotonic() - started) * 1000)
-        raise
+    except Exception as error:
+        # Handle here: re-raising through ServerErrorMiddleware makes uvicorn
+        # print the original exception, which may contain private source data.
+        response = await unexpected_error(request, error)
     response.headers["X-Request-ID"] = request_id
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
