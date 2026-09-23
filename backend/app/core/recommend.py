@@ -53,7 +53,7 @@ def _clean_text(value, fallback="") -> str:
 def generate_recommendations(
     ds: Dataset, warehouse: Optional[str] = None, category: Optional[str] = None,
     service_level: Optional[float] = None, review_period_days: Optional[int] = None,
-    explain: bool = True,
+    explain: bool = False,
     product_category: Optional[str] = None,
 ) -> RecommendationResponse:
     settings = get_settings()
@@ -232,7 +232,10 @@ def generate_recommendations(
             excluded_bulk_units=round(excluded_units, 2), excluded_bulk_orders=excluded_orders,
             raw_need=need.raw_need,
         )
-        unit = _clean_text(info.get("unit", "ед."), "ед.")
+        unit = _clean_text(info.get("unit", "")).strip()
+        if not unit:
+            unit = "ед. (не указана)"
+            warnings.append("Единица измерения не указана в источнике. Перед заказом подтвердите единицу измерения у поставщика.")
         explanation = build_explanation(name, rationale, need.recommended_qty, need.urgency, use_llm=explain, unit=unit)
         line = OrderLine(
             line_id=f"{sku}::{wh}", sku=str(sku), supplier_sku=_clean_text(info.get("supplier_sku")) or None,

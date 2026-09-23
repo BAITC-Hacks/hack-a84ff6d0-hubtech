@@ -214,7 +214,7 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(report["target_profile"]["positive_targets"], 29)
         self.assertEqual(report["target_profile"]["zero_targets"], 0)
         self.assertFalse(report["target_profile"]["total_demand_validated"])
-        self.assertEqual(json.loads((output / "preparation_report.json").read_text())["feature_columns"], FEATURES)
+        self.assertEqual(json.loads((output / "preparation_report.json").read_text(encoding="utf-8"))["feature_columns"], FEATURES)
         train = pd.read_csv(output / "training_data.csv", dtype={"sku": str})
         self.assertEqual(train.sku.iloc[0], "001_")
         self.assertNotIn("provided_factor", train.columns)

@@ -1,0 +1,38 @@
+[Unit]
+Description=Umytpa purchasing API
+After=network.target
+
+[Service]
+Type=simple
+User=umytpa
+Group=umytpa
+WorkingDirectory=/opt/umytpa/backend
+EnvironmentFile=/etc/umytpa/umytpa.env
+ExecStartPre=/opt/umytpa/backend/.venv/bin/python -m app.manage migrate
+ExecStart=/opt/umytpa/backend/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8017 --no-access-log
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+StateDirectory=umytpa
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/srv/umytpa/data
+ReadWritePaths=/var/lib/umytpa
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=umytpa-api
+
+[Install]
+WantedBy=multi-user.target

@@ -1,130 +1,222 @@
-# Развёртывание
+# Развёртывание Umytpa на Linux
 
-Сервис = FastAPI (Python) + статический фронт (React/Vite). Учётные данные — выгрузки в `IEK/` и `Systeme electric/`. Дополнительный товарный справочник — локальный `data/ekt/catalog.json`. Установленная или подключённая 1С для прототипа не нужна.
+Поставка: статическая сборка React, nginx с HTTPS, FastAPI, отдельный worker,
+SQLite на локальном диске и ежедневный systemd timer резервного копирования.
+API слушает только `127.0.0.1:8017`; браузер использует один origin и `/api`.
+Для небольшого отдела запускается ровно один worker и один процесс API.
 
----
+## 1. Требования и каталоги
 
-## Что нужно на сервере
-- Python 3.10+, Node 20.19+ в ветке 20.x либо 22.12+ (для сборки фронта), опционально Docker и nginx.
-- Каталоги выгрузок 1С (`IEK/`, `Systeme electric/`) рядом с проектом.
-- Опционально `OPENAI_API_KEY` (без него обоснования — по шаблону).
+Поддерживаемая среда — Linux с systemd, Python **3.12**, Node.js **22.19**
+(минимум 22.12), npm, nginx и доверенный TLS-сертификат. Доступ сотрудников
+ограничивается корпоративной сетью/VPN и сетевыми правилами организации.
+Потребление памяти зависит от выгрузок; до эксплуатации проверьте полный
+расчёт на целевом сервере. SQLite должна находиться на локальном диске,
+а не на SMB/NFS/синхронизируемой папке.
 
----
+| Каталог | Владелец / права | Содержимое |
+|---|---|---|
+| `/opt/umytpa` | root, чтение сервису | Репозиторий, среда Python, сборка UI |
+| `/etc/umytpa/umytpa.env` | root:umytpa, 0640 | Настройки и ключ OpenAI, если нужен |
+| `/etc/umytpa/tls` | root, закрытый ключ 0600 | `fullchain.pem`, `privkey.pem` |
+| `/srv/umytpa/data` | root:umytpa, чтение сервису | `IEK/`, `Systeme electric/` |
+| `/var/lib/umytpa` | umytpa:umytpa, 0700 | SQLite и её WAL-файлы |
+| `/var/backups/umytpa` | umytpa:umytpa, 0700 | 14 последних проверенных копий |
 
-## Подготовка (один раз)
+## 2. Установка
+
+Разместите репозиторий в `/opt/umytpa`. Создайте системного пользователя и
+каталоги (разово, с правами администратора сервера):
 
 ```bash
-# Backend
-cd backend
-python3 -m venv .venv
-./.venv/bin/pip install -r requirements.txt
-cp .env.example .env        # задать DATA_SOURCE, сроки, ключ (опц.)
-
-# Frontend (сборка статики)
+sudo useradd --system --home /nonexistent --shell /usr/sbin/nologin umytpa
+sudo install -d -o root -g umytpa -m 0750 /etc/umytpa /srv/umytpa/data
+sudo install -d -o root -g root -m 0700 /etc/umytpa/tls
+sudo install -d -o umytpa -g umytpa -m 0700 /var/lib/umytpa /var/backups/umytpa
+cd /opt/umytpa/backend
+sudo python3.12 -m venv .venv
+sudo .venv/bin/python -m pip install -r requirements.lock
 cd ../frontend
 npm ci
-npm run build               # → frontend/dist
+npm run build
 ```
 
----
-
-## Путь 1. Bare-metal (dev / небольшой прод)
+Сборку выполняет пользователь развёртывания; готовые файлы должны быть
+доступны nginx на чтение. Выгрузки скопируйте в `/srv/umytpa/data` с сохранением
+исходных имён; дайте группе `umytpa` чтение файлов и проход по каталогам.
+`ProtectSystem=strict` и `ReadOnlyPaths` запрещают сервису изменение источников.
 
 ```bash
-# Терминал 1 — backend
-cd backend
-./.venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8017
-
-# Терминал 2 — фронт (dev, hot-reload)
-cd frontend
-npm run dev                 # http://localhost:5173, прокси /api → :8017
+cd /opt/umytpa
+sudo install -o root -g umytpa -m 0640 deploy/umytpa.env.example /etc/umytpa/umytpa.env
+sudo install -m 0644 deploy/umytpa-api.service deploy/umytpa-worker.service deploy/umytpa-backup.service deploy/umytpa-backup.timer /etc/systemd/system/
 ```
 
-Для продакшна фронт отдаётся как статика (`frontend/dist`) через nginx, API — через uvicorn.
-
----
-
-## Путь 2. systemd (автозапуск backend)
-
-```ini
-# /etc/systemd/system/ekt-replenishment.service
-[Unit]
-Description=EKT Replenishment API
-After=network.target
-
-[Service]
-WorkingDirectory=/opt/ekt/backend
-ExecStart=/opt/ekt/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8017
-Restart=always
-Environment=DATA_SOURCE=excel
-
-[Install]
-WantedBy=multi-user.target
-```
-```bash
-sudo systemctl enable --now ekt-replenishment
-```
-
----
-
-## Домен и HTTPS (nginx reverse proxy)
-
-```nginx
-server {
-    server_name ekt.example.kz;
-    root /opt/ekt/frontend/dist;
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8017;
-        proxy_read_timeout 120s;   # подобрать по измеренному времени расчёта
-    }
-    location / {
-        try_files $uri /index.html;
-    }
-}
-```
-HTTPS — через certbot/Let's Encrypt.
-
----
-
-## Переменные окружения
-
-| Переменная | По умолчанию | Назначение |
-|---|---|---|
-| `DATA_SOURCE` | `excel` | Источник: `excel` / `csv` / `synthetic` |
-| `DATA_DIR` | `.` | Каталог с `IEK/`, `Systeme electric/` (или CSV) |
-| `DATA_AS_OF` | — | Зафиксировать дату расчёта (`YYYY-MM-DD`) |
-| `IEK_LEAD_TIME_DAYS` / `SYSTEME_LEAD_TIME_DAYS` | 21 / 35 | Сроки поставки (допущения) |
-| `EKT_CATALOG_ENABLED` | `true` | Обогащение из локального JSON; `false/0/no/off` отключают |
-| `EKT_CATALOG_PATH` | `data/ekt/catalog.json` | Относительный путь от корня проекта или абсолютный |
-| `SERVICE_LEVEL` | 0.95 | Уровень сервиса для страхового запаса |
-| `REVIEW_PERIOD_DAYS` | 14 | Период проверки |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` | — / `gpt-4o-mini` | LLM-обоснования (опц.) |
-
----
-
-## Безопасность (перед публичным доступом)
-- Ограничить CORS реальным доменом фронта (сейчас `*` для дева).
-- Не коммитить `.env` и выгрузки с чувствительными данными (см. `.gitignore`).
-- Таймаут прокси ≥ времени полного расчёта; при росте объёма — кеш/фоновые задачи.
-- Добавить аутентификацию перед мультипользовательским использованием (Roadmap).
-
-## Обновление внешнего справочника
-
-Каталог сайта синхронизируется отдельной CLI-командой; расчёт и экспорт не требуют доступа к ekt.kz. Подготовьте JSON на доступной машине и разместите по `EKT_CATALOG_PATH` либо выполните ограниченный проход на сервере. Параметры и ограничения — [КАТАЛОГ_EKT.md](КАТАЛОГ_EKT.md).
-
-Не смешивайте этот процесс с обновлением остатков/продаж из 1С. Для регулярных учётных обновлений сначала согласуется файловая выгрузка по расписанию; HTTP/OData выбирается под конкретную конфигурацию. Живого подключения и записи заказов в 1С в текущем сервисе нет: [ИНТЕГРАЦИЯ_1С.md](ИНТЕГРАЦИЯ_1С.md).
-
-## Отдельный запуск подготовки ML
-
-Скрипты `scripts/clean_monthly_data.py` и `scripts/prepare_ml_data.py` выполняются из корня проекта после установки backend-зависимостей:
+Отредактируйте `/etc/umytpa/umytpa.env`, задайте `APP_ORIGIN` равным настоящему
+HTTPS-origin сайта (схема и домен, без завершающего `/`) и установите сертификат в
+`/etc/umytpa/tls`. Ключ OpenAI необязателен; LLM включается отдельно в UI.
+Секреты не добавляйте в репозиторий. Установите `deploy/nginx.conf` как сайт
+nginx; замените `server_name _` в обоих блоках на корпоративный домен и
+отключите конфликтующий default site штатным способом.
 
 ```bash
-backend/.venv/bin/python scripts/clean_monthly_data.py
-backend/.venv/bin/python scripts/prepare_ml_data.py --as-of 2026-09-23
+sudo nginx -t
+sudo systemd-analyze verify /etc/systemd/system/umytpa-api.service /etc/systemd/system/umytpa-worker.service /etc/systemd/system/umytpa-backup.service /etc/systemd/system/umytpa-backup.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now umytpa-api umytpa-worker
+sudo systemctl reload nginx
+```
+
+API выполняет атомарные миграции при старте. Старые снимки в существующей БД
+импортируются в архив администратора после его создания. Для переноса старой
+БД остановите старый сервис и перенесите согласованную копию через
+`app.ops backup`, а не отдельно живой `.sqlite3` без WAL.
+
+Создание первого администратора — интерактивная команда; пароль вводится
+скрыто, стандартного пароля и открытой регистрации нет:
+
+```bash
+cd /opt/umytpa/backend
+sudo -u umytpa env APP_DB_PATH=/var/lib/umytpa/umytpa.sqlite3 .venv/bin/python -m app.manage create-admin --username admin
+sudo systemctl start umytpa-backup.service
+sudo systemctl enable --now umytpa-backup.timer
+```
+
+Для автоматизированного bootstrap поддержан `--password-env ИМЯ_ПЕРЕМЕННОЙ`;
+значение пароля не передавайте аргументом команды и не печатайте в журнал.
+
+## 3. Проверки после установки
+
+- `curl --fail http://127.0.0.1:8017/api/health` — API жив.
+- `curl --fail http://127.0.0.1:8017/api/ready` — БД доступна, heartbeat worker
+  не старше 30 секунд. При остановке worker endpoint возвращает 503.
+- Откройте HTTPS-домен, войдите, создайте менеджера, выполните расчёт,
+  исправьте количество, обновите страницу, утвердите и скачайте оба вида Excel.
+- Проверьте второй аккаунт и конфликт изменения одного заказа в двух вкладках.
+- Перезапустите API/worker: заказы и решения должны сохраниться.
+- Проверьте восстановление копии в отдельную тестовую БД, команды ниже.
+- Выполните остальные сценарии [матрицы приёмки](ПРИЕМКА.md), включая
+  реальные выгрузки, мобильную ширину и клавиатуру.
+
+## 4. Настройки и эксплуатация
+
+| Настройка | Значение в поставке |
+|---|---|
+| `APP_ENV` | `production`; `development` допустим только для локального HTTP |
+| `APP_ORIGIN` | Настоящий внешний HTTPS-origin; пример домена нужно заменить |
+| `APP_DB_PATH` | `/var/lib/umytpa/umytpa.sqlite3`; старый `ORDER_DB_PATH` — fallback |
+| `DATA_DIR`, `DATA_SOURCE` | `/srv/umytpa/data`, `excel` (`csv`/`synthetic` для своих источников/демо) |
+| `DATA_AS_OF` | Пусто: дата по последней продаже; YYYY-MM-DD для фиксации |
+| `IEK_LEAD_TIME_DAYS`, `SYSTEME_LEAD_TIME_DAYS` | 21, 35; допущения до подтверждения |
+| `SERVICE_LEVEL`, `REVIEW_PERIOD_DAYS` | 0.95, 14 |
+| `JOB_TIMEOUT_SECONDS`, `JOB_QUEUE_LIMIT` | 600 секунд, 20 заданий |
+| `WORKER_STALE_SECONDS` | 30 секунд |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | Ключ пустой, модель задаёт администратор |
+
+Сессии живут восемь часов. Пароли хешируются Argon2id, cookie — HttpOnly,
+Secure, SameSite. Изменяющие запросы защищены CSRF, попытки входа ограничены.
+Изменение количества снимает утверждение атомарно; версия защищает от
+потери правок. Один новый расчёт не удаляет предыдущий заказ.
+
+`journalctl -u umytpa-api -u umytpa-worker -u umytpa-backup` показывает
+структурированные события и request ID. HTTP access log отключён; содержимое
+продаж, тела запросов и секреты не должны выводиться в журнал. Ограничьте
+хранение journald по политике сервера. Настройте внешний мониторинг `/api/ready`,
+ошибок служб, свободного диска и давности копий; интеграции уведомлений с
+конкретной системой организации в поставке нет.
+
+Администратор сервера обновляет источники во время остановленного worker,
+заменяя весь согласованный набор файлов. Веб-загрузка выгрузок отсутствует.
+Новый расчёт использует новые данные; экспорт старого заказа всегда
+использует исходный сохранённый расчёт.
+
+## 5. Резервное копирование и восстановление
+
+Timer запускает проверенную online-копию SQLite каждый день около 02:00 UTC,
+пропущенный запуск выполняется после включения сервера. Копия включает
+зафиксированные WAL-страницы. Проверяется `integrity_check`; только успешная
+копия заменяет временный файл. Хранятся 14 последних копий (включая ручные).
+Необычные файлы в каталоге не удаляются. Перед обновлением:
+
+```bash
+sudo systemctl start umytpa-backup.service
+sudo systemctl status umytpa-backup.service
+sudo systemctl list-timers umytpa-backup.timer
+cd /opt/umytpa/backend
+sudo -u umytpa .venv/bin/python -m app.ops backup-health --directory /var/backups/umytpa
+```
+
+`backup-health` возвращает код 1, если успешной копии нет или она старше
+26 часов. Копии на том же сервере не защищают от утраты всего диска;
+организация отдельно переносит их в защищённое внешнее хранилище.
+
+Для восстановления остановите все клиенты БД, API, worker и timer. Выберите
+конкретную копию вместо `ИМЯ-КОПИИ.sqlite3`:
+
+```bash
+sudo systemctl stop umytpa-backup.timer umytpa-backup.service umytpa-worker umytpa-api
+cd /opt/umytpa/backend
+sudo -u umytpa env APP_DB_PATH=/var/lib/umytpa/umytpa.sqlite3 .venv/bin/python -m app.ops restore --source /var/backups/umytpa/ИМЯ-КОПИИ.sqlite3 --services-stopped
+sudo systemctl start umytpa-api umytpa-worker umytpa-backup.timer
+```
+
+Восстановление сначала проверяет источник, делает защитную копию нынешней БД
+в `/var/lib/umytpa/before-restore`, затем атомарно заменяет файл. При наличии
+`-wal`/`-shm` операция отклоняется: не удаляйте эти файлы вручную. Убедитесь,
+что нет открытых клиентов; при остатках после аварии выполните SQLite
+`PRAGMA wal_checkpoint(TRUNCATE)` доверенным инструментом при полностью
+остановленных службах и закройте соединение перед повтором.
+
+Для учебного восстановления используйте другой `APP_DB_PATH`, например
+`/var/lib/umytpa/restore-check.sqlite3`, не изменяя рабочую базу.
+
+## 6. Обновление и откат
+
+Сделайте копию, остановите worker/API, установите согласованную версию кода,
+выполните `pip install -r requirements.lock`, `npm ci`, тесты и сборку.
+Запустите службы: миграция проверяет версию схемы и отказывается открывать
+более новую схему старым приложением. Проверьте readiness и рабочий сценарий.
+При откате восстанавливайте одновременно предыдущую версию кода и её
+проверенную копию БД. Не удаляйте `/var/lib/umytpa` при обновлении.
+
+CI проверяет Python/JS, сборку и синтаксис Linux-конфигурации. Локальная
+Windows-среда не подтверждает запуск systemd/nginx на вашем сервере: ввод в
+эксплуатацию завершается проверками выше на настоящем Linux-хосте.
+
+## 7. Локальный справочник EKT
+
+`EKT_CATALOG_ENABLED=true` включает описательное обогащение Excel-источника.
+`EKT_CATALOG_PATH` по умолчанию указывает на `data/ekt/catalog.json` от корня
+проекта, независимо от `DATA_DIR`. API и worker должны читать один и тот же
+JSON. В серверной конфигурации можно явно задать
+`EKT_CATALOG_PATH=/srv/umytpa/data/ekt/catalog.json` и установить этот файл с
+правом чтения группе `umytpa`. Каталог источников остаётся read-only для служб.
+
+Синхронизация запускается отдельно администратором сервера/пользователем
+обновления, не из браузера и не под службой worker. Зависимости сборщика
+BeautifulSoup и soupsieve входят в зафиксированный набор Python. Из `backend`:
+
+```bash
+.venv/bin/python -m scripts.sync_ekt_catalog --help
+```
+
+Параметры ограниченного прохода, robots.txt, проверка покрытия и конфликтов —
+[КАТАЛОГ_EKT.md](КАТАЛОГ_EKT.md). На рабочий сервер устанавливается проверенный
+JSON; для расчёта и экспорта интернет к ekt.kz не требуется. При отсутствии
+или повреждении справочника числовой расчёт продолжает работать с предупреждением.
+Перезапуск не требуется только для изменения содержимого JSON: обогащение
+читается после кеша Excel. При изменении переменных окружения перезапускайте
+API и worker.
+
+Резервная копия SQLite содержит сохранённые заказы с их описаниями EKT, но не
+отдельные исходные Excel/JSON. Для воспроизводимости будущих расчётов храните
+версию источников, JSON и конфигурации отдельно по правилам организации.
+Обновление каталога не пересчитывает и не меняет сохранённые заказы.
+
+Производные ML-CSV из `data/clean/iek/` и `data/ml/iek/` включены в поставку
+для проверки. Службы их не используют; не направляйте на них `DATA_SOURCE=csv`.
+Тесты подготовки выполняются отдельно от backend-тестов командой из корня:
+
+```bash
 backend/.venv/bin/python -m unittest discover -s scripts -p 'test_*.py' -v
 ```
-
-Для отдельного окружения зависимости указаны в `scripts/requirements-cleaning.txt` и `scripts/requirements-ml.txt`. Результаты создаются в `data/clean/iek/` и `data/ml/iek/`, не требуются серверу и не загружаются в контейнер приложения автоматически. Большие производные CSV исключены из Git; отчёт подготовки фиксирует SHA-256 исходников и параметры. Планировщик подготовки и обучение модели не реализованы. Не задавайте `DATA_SOURCE=ml` или `DATA_DIR=data/ml/iek` для работы API — такого источника и контракта нет.
-
-Аудит и воспроизведение: [АУДИТ_ВЕТКИ_ALISH.md](АУДИТ_ВЕТКИ_ALISH.md). Новые города появляются в расчёте после загрузки подтверждённых складских данных, не после изменения настроек сайта: [ГОРОДА_И_СКЛАДЫ.md](ГОРОДА_И_СКЛАДЫ.md).

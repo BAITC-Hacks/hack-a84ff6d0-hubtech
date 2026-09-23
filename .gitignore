@@ -22,3 +22,12 @@ HackAlem AI_ Автоматизация формирования заказов 
 
 # Критерии оценки — только локально, в GitHub-репозиторий не попадают
 критерии/
+
+# Deployment secrets and runtime state
+/.env
+/deploy/certs/
+/backups/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+/.artifacts/

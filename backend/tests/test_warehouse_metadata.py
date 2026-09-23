@@ -3,11 +3,10 @@ from datetime import date
 import unittest
 from unittest.mock import patch
 
-from fastapi.testclient import TestClient
 import pandas as pd
 
 from app.data.adapter import Dataset
-from app.main import app
+from tests.api_support import AuthenticatedApiTest
 
 
 def dataset():
@@ -28,10 +27,10 @@ def dataset():
     )
 
 
-class WarehouseMetadataTests(unittest.TestCase):
+class WarehouseMetadataTests(AuthenticatedApiTest):
     def metadata(self, ds):
-        with TestClient(app) as client, patch("app.api.routes._load", return_value=ds):
-            response = client.get("/api/meta")
+        with patch("app.api.routes._load", return_value=ds):
+            response = self.client.get("/api/meta")
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()
 

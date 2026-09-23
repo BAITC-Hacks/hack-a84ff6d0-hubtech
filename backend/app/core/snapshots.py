@@ -1,14 +1,13 @@
 """Снимки расчёта: экспорт всегда использует показанные менеджеру данные."""
 from __future__ import annotations
 
-import os
 import sqlite3
 import time
 from contextlib import contextmanager
-from pathlib import Path
 from uuid import uuid4
 
 from app.schemas import RecommendationResponse
+from app.storage import database_path
 
 
 RETENTION_SECONDS = 7 * 24 * 60 * 60
@@ -21,8 +20,7 @@ class SnapshotNotFound(LookupError):
 
 @contextmanager
 def _connection():
-    default = Path(__file__).resolve().parents[2] / ".cache" / "orders.sqlite3"
-    path = Path(os.getenv("ORDER_DB_PATH", str(default))).expanduser()
+    path = database_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path, timeout=15)
     try:

@@ -20,7 +20,7 @@
 | `data/ml/iek/quality_issues.csv` | Разбор адресов ячеек, отрицательных значений и дублирующихся ограничений |
 | Остальные справочники ML | Проверка товаров, единиц, MOQ, транзакций, пути и предоставленной сезонности |
 
-Пустой `clean_dataset.py`, сгенерированные большие CSV и посторонний lock-файл не перенесены в отслеживаемый код. CSV воспроизводятся локально и исключены из Git. В репозитории остаются компактные отчёты: [`preparation_report.json`](../data/ml/iek/preparation_report.json), [`integration_audit.json`](../data/ml/iek/integration_audit.json), [`quality_report.json`](../data/clean/iek/quality_report.json).
+Пустой `clean_dataset.py` и посторонний lock-файл не перенесены в отслеживаемый код. При первоначальном переносе скриптов большие CSV не включались, но последующий коммит main `c7062f9` добавил их для проверки без запуска подготовки. В текущей поставке отслеживаются 12 производных CSV и три JSON-отчёта в `data/clean/iek/` и `data/ml/iek/`; они воспроизводятся скриптами и не являются новым источником рабочего API. JSON-отчёты: [`preparation_report.json`](../data/ml/iek/preparation_report.json), [`integration_audit.json`](../data/ml/iek/integration_audit.json), [`quality_report.json`](../data/clean/iek/quality_report.json).
 
 ## Результат проверки набора
 
@@ -94,3 +94,11 @@ backend/.venv/bin/python -m unittest discover -s scripts -p 'test_*.py' -v
 Для отдельного окружения используйте `scripts/requirements-cleaning.txt` и `scripts/requirements-ml.txt`. Исходные Excel не меняются. Полные правила и параметры: [CLEANING.md](../scripts/CLEANING.md), [ML_PREPARATION.md](../scripts/ML_PREPARATION.md).
 
 В проверке интеграции прошли **14 тестов скриптов** и **61 backend-тест**, включая реальные Excel. Скриптовые проверки не входят в `backend/tests` и запускаются отдельной командой. Это подтверждение конкретных свойств очистки, контрактов и расчёта, а не backtest обученной модели.
+
+## Проверки объединённого сервиса
+
+Указанные выше 61 backend-тест и 14 тестов скриптов относятся к проверке ветки
+main 23.09.2026 до объединения с личными аккаунтами, заказами и очередью.
+Результаты этой интеграции фиксируются отдельно в [ПРИЕМКА.md](ПРИЕМКА.md).
+Клиент не читает ML-CSV; сохранённые заказы и их Excel остаются под контролем
+доступа и ревизий. Обновление исследовательских файлов не заменяет расчёт.
