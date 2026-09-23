@@ -1,0 +1,138 @@
+{
+  "supplier_id": "SYSTEME",
+  "as_of": "2026-09-23",
+  "selected_model": "decomposition",
+  "decomposition_damping": 0.0,
+  "damping_validation_scores": {
+    "decomposition_damping_0": 0.2619540458990888,
+    "decomposition_damping_0.5": 0.2621850788056484,
+    "decomposition_damping_1": 0.2626491742539473
+  },
+  "validation_scores": {
+    "boosting_poisson": 0.31017283949603464,
+    "boosting_squared": 0.35437055580653964,
+    "decomposition": 0.2619540458990888,
+    "mean_3": 0.30662402974809155,
+    "seasonal_12": 0.33738877516033533
+  },
+  "test_diagnostics": [
+    {
+      "model": "boosting_poisson",
+      "unit": "шт",
+      "rows": 655,
+      "positive_rows": 655,
+      "median_ape": 0.5234060079925124,
+      "share_within_20pct": 0.21374045801526717
+    },
+    {
+      "model": "boosting_squared",
+      "unit": "шт",
+      "rows": 655,
+      "positive_rows": 655,
+      "median_ape": 0.5214196021354482,
+      "share_within_20pct": 0.2198473282442748
+    },
+    {
+      "model": "decomposition",
+      "unit": "шт",
+      "rows": 655,
+      "positive_rows": 655,
+      "median_ape": 0.5159834433579604,
+      "share_within_20pct": 0.19389312977099238
+    },
+    {
+      "model": "mean_3",
+      "unit": "шт",
+      "rows": 655,
+      "positive_rows": 655,
+      "median_ape": 0.5,
+      "share_within_20pct": 0.2015267175572519
+    },
+    {
+      "model": "seasonal_12",
+      "unit": "шт",
+      "rows": 655,
+      "positive_rows": 655,
+      "median_ape": 0.6666666666666666,
+      "share_within_20pct": 0.13282442748091602
+    }
+  ],
+  "formula": "max(0, level_qty + trend_per_month * months_from_level_anchor) * seasonal_factor",
+  "stockout_compensation": false,
+  "exceptional_orders": {
+    "transaction_rows_without_document": 0,
+    "grouped_sku_documents": 77309,
+    "sku_documents_not_usable": 312,
+    "candidates": 3417,
+    "matched_monthly_candidates": 70,
+    "automatically_excluded_orders": 0,
+    "client_id_available": false,
+    "settings": {
+      "min_prior_orders": 8,
+      "prior_days": 180,
+      "iqr_multiplier": 3,
+      "median_multiplier": 8
+    }
+  },
+  "forecast_rows": 724,
+  "forecast_available": 516,
+  "seasonality_status_counts": {
+    "insufficient_history": 563,
+    "estimated_from_past": 160,
+    "nonpositive_reference_level": 1
+  },
+  "trend_status_counts": {
+    "insufficient_recent_history": 239,
+    "unstable_trend_disabled": 224,
+    "insufficient_history": 208,
+    "stable": 40,
+    "stable_capped": 12,
+    "flat_or_unstable": 1
+  },
+  "settings": {
+    "min_history": 3,
+    "seasonality_min_observations_per_month": 2,
+    "seasonal_shrinkage": 2,
+    "slope_windows": [
+      12,
+      6
+    ],
+    "trend_min_observations": [
+      8,
+      4
+    ],
+    "slope_ratio_range": [
+      0.5,
+      2.0
+    ],
+    "leave_one_out_min_sign_share": 0.8,
+    "max_trend_share_per_month": 0.1
+  },
+  "prepared_file_hashes": {
+    "in_transit.csv": "2e16c0dd7ad370b3c51e5cba2834f7ad081db1ff36e11d33a43717984822a179",
+    "free_stock.csv": "5728a6fe2c8e92a4c405e09ce1fae055673d5df68d328a32b66d99f4d97aa40e",
+    "prediction_features.csv": "37bc833fe47bda338721785af43ddccf8c4303bc47fd4ca542007ea96791bbec",
+    "monthly_panel.csv": "0c4b0ceee362ac0d7b1a9a4fc06d8a1b690e23fde1d2218a6dcdfae3f43d3775",
+    "training_data.csv": "003c32794c00b13a4b510db94085eb8eca48ed5873b9c9f199e5402f96bd2d32",
+    "purchase_constraints.csv": "f9f17cf77e3e7f24327c1588cff8d2ae8f03a7feba70c53617db100ab8e9ca3c",
+    "products.csv": "fbf3bc8321265cb8cf1242e0e94e0c7c348e17f4c107f5d1cce9f17738a1c490",
+    "transactions.csv": "37b89934ad8fb26c9d9482e60056cc4f98beedb5ed6d0fe4334df37e1a9b985d",
+    "provided_seasonality.csv": "0d20c7228e36b52019df22b8dc5731a4fe224e4cb7a98ecc97f8e66e9eea707a",
+    "reconciliation.csv": "9f9a76446a13c45f85f51340518ce61dea663b9e721e4449b8274dea76411ab9",
+    "quality_issues.csv": "fc47a661b33d87f1d9886daf5e6bd0807a0ea0e62cf2e229a07e010d2d0c2704",
+    "monthly_stock.csv": "9ffd8ec246314fb848503c2790f097af076fb44b9818ac2ce6296be164bb5392"
+  },
+  "baseline_predictions_sha256": "7da42a99a8cd0b202efbe67f1aa74dfa67cd277f346ec8d3eed16dc323f46f62",
+  "warnings": [
+    "Месячные матрицы — источник количества. Транзакции не прибавляются к объёмам.",
+    "Кандидаты на исключительные заказы отмечены для проверки, исключённый объём равен нулю.",
+    "Совпадение месячной суммы не подтверждает область склада, клиента или разовость заказа.",
+    "Пропуски не заменены нулями; точность относится к известным неотрицательным целям.",
+    "Готовые коэффициенты Excel не используются. Сезонность пересчитывается из прошлого в каждом временном шаге.",
+    "Две полные известные сезонные истории требуются для оценки всех 12 коэффициентов; иначе коэффициенты равны 1.",
+    "Границы test уже использовались в предыдущем исследовании. Этот тест — повторное сравнение, а не новый независимый финальный holdout.",
+    "Сила тренда и победитель выбираются только по validation. Для окончательного подтверждения нужны новые месяцы.",
+    "Сентябрь прогнозируется целиком. Страховой запас и заказы здесь не рассчитываются.",
+    "Предыдущие результаты сохранены; новые результаты находятся в отдельной папке decomposition."
+  ]
+}
