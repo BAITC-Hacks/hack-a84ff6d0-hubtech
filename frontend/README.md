@@ -1,16 +1,32 @@
-# React + Vite
+# Интерфейс Umytpa
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/Vite-клиент сервиса рекомендованных заказов поставщикам. Позволяет выбрать параметры расчёта, проверить обоснование и сведения EKT, изменить количество, утвердить строки и скачать Excel сохранённого расчёта.
 
-Currently, two official plugins are available:
+## Запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Из этой папки:
 
-## React Compiler
+```bash
+npm ci
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Vite запускает интерфейс на порту `5173` и передаёт `/api` в FastAPI на `localhost:8017`. Сервер запускается отдельно по инструкции в [корневом README](../README.md#быстрый-запуск). Версии Node.js и общие зависимости указаны там же.
 
-## Expanding the Oxlint configuration
+## Источники и фильтры
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- Склады поступают из `/api/meta`: продажи, месячная история, остатки и товары в пути. Сейчас реальные данные дают только Алматы.
+- Города публичного сайта EKT не добавляются как склады без учётных выгрузок. Состояние регионов и условия подключения — [ГОРОДА_И_СКЛАДЫ.md](../docs/ГОРОДА_И_СКЛАДЫ.md).
+- «Категория 1С» и «Товарная группа» EKT — разные фильтры; неполное покрытие справочника показано пользователю.
+- Подготовленные CSV из ветки `alish` используются отдельными скриптами исследования и не загружаются браузером. Они не являются прогнозом обученной модели.
+- Экспорт использует `calculation_id` показанного расчёта и правки менеджера; смена фильтров требует нового расчёта. Изменение количества снимает утверждение строки.
+
+## Проверки
+
+```bash
+node --test src/orderUtils.test.js
+npm run lint
+npm run build
+```
+
+Описание компонентов и поведения — [ФРОНТЕНД.md](../docs/ФРОНТЕНД.md). [Документ дизайна](../docs/Дизайн_фронтенда.md) описывает целевое оформление, а не состояние подключённых источников.

@@ -36,8 +36,17 @@ def meta() -> dict:
     """Справочники для фильтров UI: склады, категории, поставщики."""
     ds = _load()
     catalog = ds.catalog if not ds.catalog.empty else ds.sales
+    # Match the engine's warehouse-bearing inputs, including monthly-only
+    # history. Keep exact source keys so the chosen filter still matches them.
+    warehouses = {
+        warehouse
+        for frame in (ds.sales, ds.monthly_sales, ds.stock, ds.in_transit)
+        if {"sku", "warehouse"}.issubset(frame.columns)
+        for warehouse in frame["warehouse"].dropna().unique()
+        if isinstance(warehouse, str) and warehouse.strip()
+    }
     return {
-        "warehouses": sorted(ds.sales["warehouse"].dropna().unique().tolist()),
+        "warehouses": sorted(warehouses),
         "categories": sorted(catalog["category"].dropna().unique().tolist()),
         "product_categories": sorted(catalog["product_category"].dropna().loc[lambda s: s.ne("")].unique().tolist()) if "product_category" in catalog else [],
         "suppliers": ds.suppliers.to_dict("records"),

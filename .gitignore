@@ -12,3 +12,15 @@ frontend/dist/
 
 # OS / editor
 .DS_Store
+
+# Reproducible offline ML tables; retain compact quality/provenance reports.
+data/clean/**
+data/ml/**
+!data/clean/iek/
+!data/clean/iek/quality_report.json
+!data/ml/iek/
+!data/ml/iek/preparation_report.json
+!data/ml/iek/integration_audit.json
+# Spreadsheet editor locks are not source data.
+.~lock.*#
+~$*.xlsx

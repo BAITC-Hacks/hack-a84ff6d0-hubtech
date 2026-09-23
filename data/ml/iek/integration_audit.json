@@ -1,0 +1,130 @@
+{
+  "audited_at": "2026-09-23T10:48:42.640612+00:00",
+  "branch": "baitc/alish",
+  "source_commit": "5facda23a28310e6d2ac44e23c00775ce3509f4b",
+  "source_commit_subject": "Add new data files for machine learning model training and quality issues",
+  "integration": "Selective offline preparation scripts plus fixes; no model training or runtime source replacement.",
+  "checks": {
+    "all_six_sources_match_branch_and_regenerated_report": true,
+    "training_count_matches_report": true,
+    "prediction_count_matches_report": true,
+    "unique_sku_target_month": true,
+    "targets_finite_nonnegative": true,
+    "features_present": true,
+    "target_and_split_excluded_from_features": true,
+    "split_boundaries_chronological": true,
+    "no_incomplete_target_month": true
+  },
+  "source_files": {
+    "sales": {
+      "file": "IEK/Ежемесячные продажи в количественном выражении за последние 2 года.xlsx",
+      "sha256": "048a0af940370153511769396570259a1bb28da63709d9b974f99c45081fa255",
+      "matches_branch_source": true,
+      "matches_regenerated_report": true
+    },
+    "stock": {
+      "file": "IEK/Ежемесячные остатки продукции за последние 2 года  ИЭК.xlsx",
+      "sha256": "ad8a8df9cbb242a3df60a147fb4011b146ca7cdd9e98c1247b1b19fd517f4a30",
+      "matches_branch_source": true,
+      "matches_regenerated_report": true
+    },
+    "transactions": {
+      "file": "IEK/Динамика продаж_2025-2026.xlsx",
+      "sha256": "7b0100a662eba816fd2e6a477ba56ca2a7846d3489ce1083821c94333ac30e4c",
+      "matches_branch_source": true,
+      "matches_regenerated_report": true
+    },
+    "moq": {
+      "file": "IEK/MOQ  ИЭК.xlsx",
+      "sha256": "4705b5bbbaa7c55541a151f146270bcbdc72a4ce28686fdb3378575733c4a446",
+      "matches_branch_source": true,
+      "matches_regenerated_report": true
+    },
+    "transit": {
+      "file": "IEK/Путь ИЭК 22.09.2026.xlsx",
+      "sha256": "751fd3c2cbdfabe32f9c20c7f0289135273f007471f39101f03f9c6e1231ce7d",
+      "matches_branch_source": true,
+      "matches_regenerated_report": true
+    },
+    "seasonality": {
+      "file": "IEK/Сезонность ИЭК.xlsx",
+      "sha256": "d4d9a8f208884c5197d0dcea0eb60d3972e9382cb3530675d0760fe9a8339635",
+      "matches_branch_source": true,
+      "matches_regenerated_report": true
+    }
+  },
+  "branch_report_counts": {
+    "products": 3183,
+    "monthly_rows": 105039,
+    "training_rows": 28979,
+    "prediction_rows": 3183,
+    "prediction_with_sufficient_history": 1898,
+    "transactions": 171603,
+    "moq_rows": 1937,
+    "transit_receipts": 306,
+    "comparable_sku_months": 21262,
+    "mismatched_signed_sku_months": 7414
+  },
+  "regenerated_counts": {
+    "products": 3183,
+    "monthly_rows": 105039,
+    "training_rows": 28979,
+    "prediction_rows": 3183,
+    "prediction_with_sufficient_history": 1898,
+    "transactions": 171603,
+    "moq_rows": 1937,
+    "transit_receipts": 306,
+    "comparable_sku_months": 21262,
+    "mismatched_signed_sku_months": 7414
+  },
+  "training_profile": {
+    "rows": 28979,
+    "sku_count": 1755,
+    "zero_targets": 0,
+    "positive_targets": 28979,
+    "missing_unit_rows": 0,
+    "splits": {
+      "train": {
+        "rows": 20907,
+        "start": "2024-04-01",
+        "end": "2025-12-01"
+      },
+      "validation": {
+        "rows": 5962,
+        "start": "2026-01-01",
+        "end": "2026-06-01"
+      },
+      "test": {
+        "rows": 2110,
+        "start": "2026-07-01",
+        "end": "2026-08-01"
+      }
+    }
+  },
+  "prediction_profile": {
+    "rows": 3183,
+    "unknown_unit_rows": 330,
+    "sufficient_history": 1898
+  },
+  "transaction_warehouses": {
+    "Алматы": 171603
+  },
+  "quality_issues": {
+    "negative_quantity_preserved": 361,
+    "invalid_quantity": 15,
+    "duplicate_constraint_removed": 1,
+    "non_product_note_row_excluded": 2
+  },
+  "reconciliation": {
+    "comparable": 21262,
+    "mismatched_signed": 7414,
+    "mismatch_share": 0.3486972062835105
+  },
+  "limitations": [
+    "IEK only; no new source history or other cities.",
+    "Unknown monthly sales excluded by default: zero-target coverage must be agreed before total-demand evaluation.",
+    "Monthly warehouse scope is unconfirmed; transaction city does not prove monthly report scope.",
+    "Chronological checks are not proof of source availability at historical prediction time.",
+    "No trained model, no measured forecast accuracy, no automatic order or 1C write."
+  ]
+}
