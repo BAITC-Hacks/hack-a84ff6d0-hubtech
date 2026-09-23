@@ -1,0 +1,123 @@
+{
+  "date": "2026-09-23",
+  "scope": "Local working tree based on aba1cf5 with baitc/frontend 5a0ace2 and integration fixes",
+  "environment": {
+    "os": "macOS",
+    "python": "3.12.14",
+    "node": "24.19.0",
+    "playwright": "1.62.1",
+    "python_dependencies": "fresh venv, backend/requirements-dev.txt including requirements.lock",
+    "frontend_dependencies": "npm ci and locked Playwright addition"
+  },
+  "tests": {
+    "backend": {
+      "passed": 124,
+      "skipped": 0,
+      "real_excel_enabled": true,
+      "seconds": 26.42
+    },
+    "scripts": {
+      "passed": 23
+    },
+    "frontend_unit": {
+      "passed": 35
+    },
+    "frontend_ui": {
+      "passed": 19
+    },
+    "must_have_groups": {
+      "passed": 5,
+      "input_sensitivity_cases": 14
+    },
+    "lint": "passed",
+    "build": "passed",
+    "pip_check": "passed"
+  },
+  "http_smoke": {
+    "synthetic": {
+      "status": "passed",
+      "draft_xlsx_rows": 11,
+      "approved_xlsx_rows": 1
+    },
+    "excel": {
+      "status": "passed",
+      "draft_xlsx_rows": 429,
+      "approved_xlsx_rows": 1
+    }
+  },
+  "browser_excel": {
+    "status": "passed",
+    "source": "excel",
+    "browser": "Chromium",
+    "widths": [
+      320,
+      360,
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "mobile_page_size": 5,
+    "calculation_form_width": 320,
+    "persisted_edit": {
+      "before": 6989,
+      "after": 6990
+    },
+    "export": {
+      "quantity": 6990,
+      "sheets": [
+        "Заказ поставщикам",
+        "Параметры расчёта"
+      ]
+    },
+    "conflict": "detected and explicitly resolved",
+    "elapsed_ms": 31588,
+    "production_approval": false
+  },
+  "backtest": {
+    "report": "data/evaluation/forecast_backtest.json",
+    "metrics": "data/evaluation/forecast_metrics.csv",
+    "sku_count": 3017,
+    "metric_rows": 180,
+    "general_superiority_demonstrated": false
+  },
+  "not_verified": [
+    "new clone on Linux",
+    "remote CI execution",
+    "target-server systemd/nginx/TLS deployment",
+    "company 1C import",
+    "real business pilot and savings",
+    "full five-role production specification",
+    "live presentation score"
+  ],
+  "production_approval": false,
+  "browser_synthetic": {
+    "status": "passed",
+    "source": "synthetic",
+    "browser": "Chromium",
+    "widths": [
+      320,
+      360,
+      390,
+      768,
+      1024,
+      1440
+    ],
+    "mobile_page_size": 5,
+    "calculation_form_width": 320,
+    "persisted_edit": {
+      "before": 2130,
+      "after": 2140
+    },
+    "export": {
+      "quantity": 2140,
+      "sheets": [
+        "Заказ поставщикам",
+        "Параметры расчёта"
+      ]
+    },
+    "conflict": "detected and explicitly resolved",
+    "elapsed_ms": 6867,
+    "production_approval": false
+  }
+}

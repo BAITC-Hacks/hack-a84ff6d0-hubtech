@@ -1,380 +1,320 @@
-import { useEffect, useMemo, useState } from 'react'
-import { fetchMeta, recommend, exportExcel } from './api'
-import { buildExportPayload, getQuantity, quantityError, safeEktUrl, summarizeLines } from './orderUtils'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { getSession, logout } from './api'
+import { safeMessage } from './format'
+import { Empty, Loading, Status } from './components/Common'
+import CalculatePage from './pages/CalculatePage'
+import HistoryPage from './pages/HistoryPage'
+import LoginPage from './pages/LoginPage'
+import OrderPage from './pages/OrderPage'
+import UsersPage from './pages/UsersPage'
+import Icon from './Icons'
 import './App.css'
 
-const PAGE_SIZE = 50
-const URGENCY = {
-  high: { label: 'Срочно', cls: 'u-high' },
-  medium: { label: 'Средне', cls: 'u-medium' },
-  low: { label: 'Плановый', cls: 'u-low' },
+function routeFromHash(hash) {
+  try {
+    const [path, query] = (hash || '#/orders').slice(1).split('?')
+    if (path === '/orders') return { page: 'orders' }
+    if (path.startsWith('/orders/') && path.slice(8))
+      return { page: 'order', id: decodeURIComponent(path.slice(8)) }
+    if (path === '/calculate')
+      return {
+        page: 'calculate',
+        jobId: new URLSearchParams(query).get('job'),
+      }
+    if (path === '/users') return { page: 'users' }
+    if (path === '/account') return { page: 'account' }
+    return { page: 'missing' }
+  } catch {
+    return { page: 'missing' }
+  }
 }
 
-function fmt(n) {
-  return Number.isFinite(Number(n)) ? Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) : '—'
-}
+function Workspace({ session, active, onAuthRequired, onLogout }) {
+  const user = session.user
+  const [hash, setHash] = useState(window.location.hash || '#/orders')
+  const [logoutBusy, setLogoutBusy] = useState(false)
+  const [logoutError, setLogoutError] = useState('')
+  const currentHash = useRef(hash)
+  const guard = useRef(null)
+  const navigating = useRef(false)
+  const route = routeFromHash(hash)
+  const registerGuard = useCallback((fn) => {
+    guard.current = fn
+    return () => {
+      if (guard.current === fn) guard.current = null
+    }
+  }, [])
 
-function fmtUnits(units) {
-  return Object.entries(units).sort(([left], [right]) => left.localeCompare(right, 'ru'))
-    .map(([unit, quantity]) => `${fmt(quantity)} ${unit}`).join(' · ') || '0'
-}
+  const navigate = useCallback(async (target, { skipGuard = false } = {}) => {
+    if (target === currentHash.current || navigating.current) return
+    navigating.current = true
+    try {
+      if (!skipGuard && guard.current && !(await guard.current())) return
+      currentHash.current = target
+      window.history.pushState(null, '', target)
+      setHash(target)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    } finally {
+      navigating.current = false
+    }
+  }, [])
 
-function fmtDate(value) {
-  if (!value) return 'не указана'
-  const parts = String(value).slice(0, 10).split('-')
-  return parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : String(value)
-}
+  useEffect(() => {
+    const change = async () => {
+      const target = window.location.hash || '#/orders'
+      if (target === currentHash.current) return
+      if (guard.current && !(await guard.current())) {
+        window.history.replaceState(null, '', currentHash.current)
+        return
+      }
+      currentHash.current = target
+      setHash(target)
+    }
+    window.addEventListener('hashchange', change)
+    return () => window.removeEventListener('hashchange', change)
+  }, [])
 
-function DataInfo({ data }) {
-  if (!data) return null
-  const source = { excel: 'Excel-выгрузки 1С', synthetic: 'Демонстрационные данные', csv: 'CSV-таблицы' }[data.data_source] || 'Данные сервиса'
-  const warnings = [...new Set(data.warnings || [])]
-  const enrichment = data.data_quality?.catalog_enrichment
-  const hasCoverage = Number.isFinite(enrichment?.matched) && Number.isFinite(enrichment?.total_catalog)
+  async function signOut() {
+    if (guard.current && !(await guard.current())) return
+    setLogoutBusy(true)
+    setLogoutError('')
+    try {
+      await logout()
+      onLogout()
+    } catch (failure) {
+      if (failure.status === 401) onLogout()
+      else setLogoutError(safeMessage(failure))
+    } finally {
+      setLogoutBusy(false)
+    }
+  }
+
+  const shared = { active, onAuthRequired, navigate }
+  const nav = [
+    ['#/orders', 'orders', 'Заказы'],
+    ['#/calculate', 'calculate', 'Рассчитать'],
+    ...(user.role === 'admin' ? [['#/users', 'users', 'Команда']] : []),
+  ]
   return (
-    <section className="data-info" aria-label="Источник данных">
-      <p>Основные данные для расчёта: <strong>{source}</strong> · Дата расчёта: {fmtDate(data.as_of)}</p>
-      <div className="catalog-info">
-        <p><strong>Справочник ekt.kz:</strong> {hasCoverage
-          ? `сопоставлено ${fmt(enrichment.matched)} из ${fmt(enrichment.total_catalog)} товаров.`
-          : 'сведения пока недоступны.'}
-          {enrichment?.fetched_at && ` Каталог собран: ${fmtDate(enrichment.fetched_at)}.`}
-        </p>
-        <p>{enrichment?.matched > 0
-          ? 'Товарные группы и характеристики помогают проверить позицию. Продажи, остатки и условия заказа берутся из основных данных.'
-          : 'Расчёт и экспорт доступны по основным данным. Товарные группы и характеристики появятся после сопоставления со справочником.'}
-        </p>
-        {enrichment?.conflicts > 0 && <p>Неоднозначных совпадений: {fmt(enrichment.conflicts)}. Справочные данные для них не используются.</p>}
-        {enrichment?.crawl_quarantined > 0 && <p>При сборе справочника исключено товаров с противоречивыми данными: {fmt(enrichment.crawl_quarantined)}.</p>}
-      </div>
-      {warnings.length > 0 && (
-        <details>
-          <summary>Ограничения данных и допущения ({warnings.length})</summary>
-          <ul>{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
-        </details>
-      )}
-    </section>
-  )
-}
-
-function ProductReference({ line }) {
-  const productUrl = safeEktUrl(line.product_url)
-  const attributes = Object.entries(line.product_attributes || {})
-    .filter(([name, value]) => name.trim() && typeof value === 'string' && value.trim())
-  const hasReference = Boolean(line.product_category || line.product_subcategory || line.product_brand || productUrl || attributes.length)
-  return (
-    <section className="product-reference" aria-label={`Справочные данные ${line.sku}`}>
-      <div className="product-reference-head">
-        <h3>Сведения о товаре</h3>
-        {productUrl && <a href={productUrl} target="_blank" rel="noopener noreferrer">Карточка на ekt.kz<span className="sr-only"> — откроется в новой вкладке</span></a>}
-      </div>
-      <dl className="product-details">
-        <div><dt>Категория 1С</dt><dd>{line.category || 'Не указана'}</dd></div>
-        {line.product_category && <div><dt>Товарная группа</dt><dd>{line.product_category}</dd></div>}
-        {line.product_subcategory && <div><dt>Подгруппа</dt><dd>{line.product_subcategory}</dd></div>}
-        {line.product_brand && <div><dt>Бренд</dt><dd>{line.product_brand}</dd></div>}
-        {line.supplier_sku && <div><dt>Артикул производителя</dt><dd>{line.supplier_sku}</dd></div>}
-      </dl>
-      {attributes.length > 0 && (
-        <>
-          <h4>Характеристики из справочника ekt.kz</h4>
-          <dl className="product-details product-attributes">
-            {attributes.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}
-          </dl>
-        </>
-      )}
-      {attributes.length === 0 && <p className="product-reference-note">Характеристики для этой позиции пока не загружены.</p>}
-      <p className="product-reference-note">{hasReference
-        ? `Сведения справочника ekt.kz · дата: ${fmtDate(line.catalog_fetched_at)}.`
-        : 'Сведения справочника ekt.kz для этого артикула пока не найдены.'}</p>
-    </section>
-  )
-}
-
-function Line({ line, qty, onQty, approved, onApprove, disabled }) {
-  const [open, setOpen] = useState(false)
-  const r = line.rationale
-  const u = URGENCY[line.urgency] || URGENCY.low
-  const error = quantityError(line, qty)
-  const errorId = `quantity-error-${encodeURIComponent(line.line_id)}`
-  const label = `${line.sku}${line.warehouse ? `, ${line.warehouse}` : ''}`
-  return (
-    <>
-      <tr className={approved ? 'row-approved' : ''}>
-        <td>
-          <input type="checkbox" checked={approved} onChange={onApprove}
-            aria-label={`Утвердить ${label}`} disabled={disabled || Boolean(error) || Number(qty) === 0} />
-        </td>
-        <td className="mono">{line.sku}</td>
-        <td>
-          {line.name}
-          <span className="line-meta">{line.warehouse || 'Склад не указан'} · {line.unit || 'ед.'}</span>
-          {line.product_category && <span className="line-category">{line.product_category}{line.product_subcategory ? ` / ${line.product_subcategory}` : ''}</span>}
-          {line.warnings?.length > 0 && <span className="line-warning">Есть ограничения данных — см. обоснование</span>}
-        </td>
-        <td><span className={`badge ${u.cls}`}>{u.label}</span></td>
-        <td className="num">{fmt(line.days_of_cover)}</td>
-        <td className="num quantity-cell">
-          <input className={`qty ${error ? 'qty-invalid' : ''}`} type="number" min="0"
-            step={line.pack_size || 'any'} value={qty} onChange={(event) => onQty(event.target.value)}
-            aria-label={`Количество к заказу ${label}`} aria-invalid={Boolean(error)}
-            aria-describedby={error ? errorId : undefined} disabled={disabled} />
-          <span className="quantity-rule">мин. {fmt(line.min_order_qty || 0)} · кратно {fmt(line.pack_size || 1)}</span>
-          {error && <span id={errorId} className="quantity-error">{error}</span>}
-          {!error && Number(qty) === 0 && <span className="quantity-rule">Исключено из заказа</span>}
-        </td>
-        <td>
-          <button className="link" onClick={() => setOpen((value) => !value)}
-            aria-expanded={open} aria-label={`${open ? 'Скрыть' : 'Показать'} обоснование ${label}`}>
-            {open ? 'скрыть' : 'почему?'}
-          </button>
-        </td>
-      </tr>
-      {open && (
-        <tr className="explain-row">
-          <td colSpan={7}>
-            <div className="explain">
-              <p className="explain-text">{line.explanation}</p>
-              <div className="chips">
-                <span>прогноз спроса: <b>{fmt(r.forecast_demand)}</b></span>
-                <span>спрос/день: <b>{fmt(r.avg_daily_demand)}</b></span>
-                <span>сезонность: <b>×{fmt(r.seasonality_factor)}</b></span>
-                <span>тренд: <b>×{fmt(r.trend_factor)}</b></span>
-                <span>страховой запас: <b>{fmt(r.safety_stock)}</b></span>
-                <span>остаток: <b>{fmt(r.on_hand)}</b>{r.stock_as_of ? ` на ${fmtDate(r.stock_as_of)}` : ''}</span>
-                <span>учтено в пути: <b>{fmt(r.in_transit)}</b></span>
-                {r.ignored_in_transit > 0 && <span className="chip-warn">не учтено в пути: <b>{fmt(r.ignored_in_transit)}</b></span>}
-                {r.lost_demand_uplift > 0 && <span className="chip-warn">упущенный спрос: <b>+{fmt(r.lost_demand_uplift)}</b></span>}
-                {r.excluded_bulk_orders > 0 && (
-                  <span className="chip-warn">исключён опт: <b>{r.excluded_bulk_orders} записей / {fmt(r.excluded_bulk_units)} ед.</b></span>
-                )}
-              </div>
-              {line.warnings?.length > 0 && <ul className="line-warnings">{line.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
-              <ProductReference line={line} />
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
-  )
-}
-
-function SupplierGroup({ group, qtyEdits, approved, onQty, onApprove, onApproveGroup, disabled }) {
-  const [page, setPage] = useState(0)
-  const totals = useMemo(() => summarizeLines(group.lines, qtyEdits, approved), [group.lines, qtyEdits, approved])
-  const pageCount = Math.ceil(group.lines.length / PAGE_SIZE)
-  const visibleLines = group.lines.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-  const allApproved = totals.positions > 0 && totals.approved === totals.positions
-  return (
-    <section className="group">
-      <div className="group-head">
-        <h2>{group.supplier_name}</h2>
-        <span className="meta">срок поставки {group.lead_time_days} дн · {totals.invalid ? 'сумма после исправления' : fmtUnits(totals.unitsByUnit)} · {group.lines.length} поз.</span>
-        <button className="link group-approve" disabled={disabled || (!allApproved && (totals.invalid > 0 || !totals.positions))}
-          onClick={() => onApproveGroup(group.lines, !allApproved)}>
-          {allApproved ? 'Снять утверждение' : `Утвердить все ${totals.positions} поз.`}
-        </button>
-      </div>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th><span className="sr-only">Утверждено</span></th><th>Артикул</th><th>Наименование / склад</th><th>Срочность</th>
-              <th className="num">Покрытие, дн</th><th className="num">К заказу</th><th><span className="sr-only">Обоснование</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleLines.map((line) => (
-              <Line key={line.line_id} line={line} qty={getQuantity(line, qtyEdits)}
-                onQty={(value) => onQty(line.line_id, value)} approved={Boolean(approved[line.line_id])}
-                onApprove={() => onApprove(line.line_id)} disabled={disabled} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {pageCount > 1 && (
-        <nav className="pagination" aria-label={`Страницы: ${group.supplier_name}`}>
-          <span>{page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, group.lines.length)} из {group.lines.length} · утверждения и экспорт учитывают все страницы</span>
-          <button className="ghost" disabled={page === 0} onClick={() => setPage((value) => value - 1)} aria-label={`Предыдущая страница: ${group.supplier_name}`}>Назад</button>
-          <span>{page + 1} / {pageCount}</span>
-          <button className="ghost" disabled={page + 1 === pageCount} onClick={() => setPage((value) => value + 1)} aria-label={`Следующая страница: ${group.supplier_name}`}>Далее</button>
+    <div className="app" hidden={!active}>
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault()
+          document.getElementById('main')?.focus()
+        }}
+      >
+        Перейти к содержимому
+      </a>
+      <header className="topbar">
+        <a
+          className="brand"
+          href="#/orders"
+          aria-label="Umytpa — заказы"
+          onClick={(event) => {
+            event.preventDefault()
+            navigate('#/orders')
+          }}
+        >
+          <span className="brand-mark">
+            <Icon name="box" size={26} />
+          </span>
+          umytpa<span className="brand-dot">.</span>
+        </a>
+        <nav className="main-nav" aria-label="Основная навигация">
+          {nav.map(([target, page, label]) => (
+            <a
+              key={target}
+              href={target}
+              className={
+                route.page === page ||
+                (page === 'orders' && route.page === 'order')
+                  ? 'nav-active'
+                  : ''
+              }
+              aria-current={
+                route.page === page ||
+                (page === 'orders' && route.page === 'order')
+                  ? 'page'
+                  : undefined
+              }
+              onClick={(event) => {
+                event.preventDefault()
+                navigate(target)
+              }}
+            >
+              {label}
+            </a>
+          ))}
         </nav>
-      )}
-    </section>
+        <a
+          href="#/account"
+          className="account-link"
+          aria-label={'Учётная запись ' + user.username}
+          onClick={(event) => {
+            event.preventDefault()
+            navigate('#/account')
+          }}
+        >
+          <span className="avatar">
+            {user.username.slice(0, 1).toUpperCase()}
+          </span>
+          <span>{user.username}</span>
+        </a>
+      </header>
+      <main id="main" tabIndex="-1">
+        {route.page === 'orders' && <HistoryPage {...shared} user={user} />}
+        {route.page === 'calculate' && (
+          <CalculatePage {...shared} jobId={route.jobId} />
+        )}
+        {route.page === 'order' && (
+          <OrderPage
+            key={route.id}
+            {...shared}
+            orderId={route.id}
+            registerGuard={registerGuard}
+          />
+        )}
+        {route.page === 'users' &&
+          (user.role === 'admin' ? (
+            <UsersPage {...shared} user={user} />
+          ) : (
+            <Empty title="Недостаточно прав">
+              Раздел сотрудников доступен администратору.
+            </Empty>
+          ))}
+        {route.page === 'account' && (
+          <>
+            <div className="page-heading">
+              <div>
+                <span className="step-label">УЧЁТНАЯ ЗАПИСЬ</span>
+                <h1>Ваш рабочий доступ</h1>
+              </div>
+            </div>
+            <section
+              className="panel account-panel"
+              aria-label="Данные учётной записи"
+            >
+              <dl>
+                <div>
+                  <dt>Имя пользователя</dt>
+                  <dd>{user.username}</dd>
+                </div>
+                <div>
+                  <dt>Роль</dt>
+                  <dd>
+                    {user.role === 'admin'
+                      ? 'Администратор'
+                      : 'Менеджер закупок'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Статус</dt>
+                  <dd>{user.active ? 'Активна' : 'Отключена'}</dd>
+                </div>
+              </dl>
+              <p>Для смены пароля обратитесь к администратору организации.</p>
+              <Status error={logoutError} />
+              <button className="ghost" onClick={signOut} disabled={logoutBusy}>
+                {logoutBusy ? 'Выходим…' : 'Выйти из учётной записи'}
+              </button>
+            </section>
+          </>
+        )}
+        {route.page === 'missing' && (
+          <>
+            <Empty title="Страница не найдена">
+              Проверьте адрес или вернитесь к заказам.
+            </Empty>
+            <button className="primary" onClick={() => navigate('#/orders')}>
+              К заказам
+            </button>
+          </>
+        )}
+      </main>
+      <footer className="footer">
+        <span className="footer-brand">umytpa.</span>
+        <span>Осознанные закупки · ТОО «Электрокомплект»</span>
+        <span>Решение остаётся за вами</span>
+      </footer>
+    </div>
   )
 }
 
 export default function App() {
-  const [meta, setMeta] = useState(null)
-  const [warehouse, setWarehouse] = useState('')
-  const [category, setCategory] = useState('')
-  const [productCategory, setProductCategory] = useState('')
-  const [serviceLevel, setServiceLevel] = useState(0.95)
-  const [reviewPeriod, setReviewPeriod] = useState(14)
-  const [explain, setExplain] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const [result, setResult] = useState(null)
-  const [calculatedParams, setCalculatedParams] = useState(null)
-  const [qtyEdits, setQtyEdits] = useState({})
-  const [approved, setApproved] = useState({})
+  const [session, setSession] = useState(null)
+  const [retainedSession, setRetainedSession] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
-
+  const [attempt, setAttempt] = useState(0)
+  const onAuthRequired = useCallback(() => setSession(null), [])
   useEffect(() => {
-    let active = true
-    fetchMeta().then((data) => { if (active) setMeta(data) })
-      .catch((failure) => { if (active) setError(failure.message) })
-    return () => { active = false }
-  }, [])
-
-  const params = {
-    warehouse: warehouse || null,
-    category: category || null,
-    product_category: productCategory || null,
-    service_level: Number(serviceLevel),
-    review_period_days: Number(reviewPeriod),
-    explain,
-  }
-  const validPeriod = reviewPeriod !== '' && Number.isInteger(Number(reviewPeriod)) && Number(reviewPeriod) >= 1 && Number(reviewPeriod) <= 120
-  const pendingSettings = result && JSON.stringify(params) !== JSON.stringify(calculatedParams)
-  const lines = useMemo(() => result?.groups.flatMap((group) => group.lines) || [], [result])
-  const totals = useMemo(() => summarizeLines(lines, qtyEdits, approved), [lines, qtyEdits, approved])
-  const busy = loading || exporting
-
-  async function run() {
-    if (!validPeriod || busy) return
+    const controller = new AbortController()
+    // Remote session retries must replace the previous failure with a loading state.
+    // oxlint-disable-next-line react/set-state-in-effect
     setLoading(true)
     setError('')
-    setNotice('')
-    try {
-      const data = await recommend(params)
-      setResult(data)
-      setCalculatedParams(params)
-      setQtyEdits({})
-      setApproved({})
-    } catch (failure) {
-      setError(failure.message)
-    } finally {
-      setLoading(false)
-    }
+    getSession({ signal: controller.signal })
+      .then((value) => {
+        if (!controller.signal.aborted) {
+          setSession(value)
+          setRetainedSession(value)
+        }
+      })
+      .catch((failure) => {
+        if (controller.signal.aborted) return
+        if (failure.status !== 401) setError(safeMessage(failure))
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
+  }, [attempt])
+  function onLogin(value) {
+    if (retainedSession && retainedSession.user.id !== value.user.id)
+      window.history.replaceState(null, '', '#/orders')
+    setSession(value)
+    setRetainedSession(value)
   }
-
-  function editQuantity(lineId, value) {
-    setQtyEdits((previous) => ({ ...previous, [lineId]: value }))
-    setApproved((previous) => ({ ...previous, [lineId]: false }))
-    setNotice('')
-  }
-
-  function approveGroup(groupLines, value) {
-    setApproved((previous) => {
-      const next = { ...previous }
-      for (const line of groupLines) {
-        const quantity = getQuantity(line, qtyEdits)
-        next[line.line_id] = value && !quantityError(line, quantity) && Number(quantity) > 0
-      }
-      return next
-    })
-    setNotice('')
-  }
-
-  async function exportOrder(approvedOnly) {
-    if (!result || busy) return
-    setExporting(true)
-    setError('')
-    setNotice('')
-    try {
-      await exportExcel(buildExportPayload(result, qtyEdits, approved, approvedOnly))
-      setNotice(approvedOnly ? 'Excel с утверждёнными позициями подготовлен.' : 'Excel с текущими количествами подготовлен. Статус утверждения указан для каждой позиции.')
-    } catch (failure) {
-      setError(failure.message)
-    } finally {
-      setExporting(false)
-    }
-  }
-
+  if (loading)
+    return (
+      <main className="session-loading">
+        <Loading>Проверяем доступ…</Loading>
+      </main>
+    )
+  if (error)
+    return (
+      <main className="session-loading">
+        <h1>Не удалось подключиться</h1>
+        <Status
+          error={error}
+          onRetry={() => setAttempt((value) => value + 1)}
+        />
+      </main>
+    )
   return (
-    <div className="app">
-      <header>
-        <h1>ЭКТ · Автозаказы поставщикам</h1>
-        <p className="sub">Рекомендованное пополнение склада на основе прогноза спроса · HackAlem AI</p>
-      </header>
-      <DataInfo data={result || meta} />
-      <section className="controls" aria-label="Параметры расчёта">
-        <label>Склад
-          <select value={warehouse} onChange={(event) => setWarehouse(event.target.value)}>
-            <option value="">Все</option>
-            {meta?.warehouses.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label>Категория 1С
-          <select value={category} onChange={(event) => setCategory(event.target.value)}>
-            <option value="">Все</option>
-            {meta?.categories.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </label>
-        <label>Товарная группа
-          <select aria-label="Товарная группа" value={productCategory} onChange={(event) => setProductCategory(event.target.value)}
-            disabled={!meta?.product_categories?.length}
-            aria-describedby={productCategory && meta?.data_quality?.catalog_enrichment?.unmatched > 0 ? 'product-category-coverage' : undefined}>
-            <option value="">Все</option>
-            {meta?.product_categories?.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-          {productCategory && meta?.data_quality?.catalog_enrichment?.unmatched > 0 && (
-            <span className="filter-coverage" id="product-category-coverage" role="status">
-              Фильтр по товарной группе охватывает только сопоставленные товары. Для расчёта по всему учётному каталогу выберите «Все».
-            </span>
-          )}
-        </label>
-        <label>Уровень сервиса
-          <select value={serviceLevel} onChange={(event) => setServiceLevel(event.target.value)}>
-            <option value="0.90">90%</option><option value="0.95">95%</option><option value="0.98">98%</option><option value="0.99">99%</option>
-          </select>
-        </label>
-        <label>Период проверки, дн
-          <input type="number" min="1" max="120" step="1" value={reviewPeriod}
-            aria-invalid={!validPeriod} aria-describedby={!validPeriod ? 'period-error' : undefined}
-            onChange={(event) => setReviewPeriod(event.target.value)} />
-        </label>
-        <label className="chk"><input type="checkbox" checked={explain} onChange={(event) => setExplain(event.target.checked)} />LLM-обоснования</label>
-        <button className="primary" onClick={run} disabled={busy || !meta || !validPeriod}>{loading ? 'Считаю…' : 'Рассчитать заказ'}</button>
-      </section>
-      {!validPeriod && <p className="validation-message" id="period-error">Укажите целое число дней от 1 до 120.</p>}
-      {error && <div className="error" role="alert">{error}</div>}
-      {notice && <p className="success" role="status">{notice}</p>}
-
-      {result && (
-        <>
-          <section className="result-context" aria-label="Параметры отображённого расчёта">
-            <p>Текущий расчёт: <strong>{calculatedParams.warehouse || 'все склады'}</strong> · категория 1С: {calculatedParams.category || 'все'} · товарная группа: {calculatedParams.product_category || 'все'} · сервис {fmt(calculatedParams.service_level * 100)}% · период проверки {calculatedParams.review_period_days} дн · дата расчёта {fmtDate(result.as_of)}</p>
-            {pendingSettings && <p className="pending" role="status">Параметры изменены. Нажмите «Рассчитать заказ», чтобы применить их. Экспорт использует текущий расчёт и ваши правки.</p>}
-          </section>
-          <section className="summary" aria-label="Итоги заказа">
-            <div><span>Поставщиков</span><b>{result.groups.length}</b></div>
-            <div><span>Позиций в заказе</span><b>{totals.positions}</b></div>
-            <div><span>Количество по единицам</span><b className="unit-breakdown">{totals.invalid ? '—' : fmtUnits(totals.unitsByUnit)}</b></div>
-            <div><span>Риск дефицита, поз.</span><b className="danger">{totals.high}</b></div>
-            <div><span>Утверждено позиций</span><b>{totals.approved}</b></div>
-            <div><span>Утверждено по единицам</span><b className="unit-breakdown">{fmtUnits(totals.approvedByUnit)}</b></div>
-          </section>
-          <div className="export-controls">
-            <button className="ghost" onClick={() => exportOrder(false)} disabled={busy || totals.invalid > 0 || !totals.positions}>Excel: все позиции с правками</button>
-            <button className="primary" onClick={() => exportOrder(true)} disabled={busy || totals.invalid > 0 || !totals.approved}>Excel: только утверждённые ({totals.approved})</button>
-            {exporting && <span role="status">Готовлю Excel…</span>}
-          </div>
-          <p className="export-help">Нулевые количества исключаются из заказа. Изменение количества снимает утверждение. При новом расчёте правки и утверждения сбрасываются.</p>
-          {totals.invalid > 0 && <p className="validation-message" role="status">Исправьте количества: {totals.invalid} поз. Экспорт станет доступен после исправления.</p>}
-          {!lines.length && <div className="empty">Для выбранных параметров нет позиций к заказу.</div>}
-          {result.groups.map((group) => (
-            <SupplierGroup key={`${result.calculation_id}:${group.supplier_id}`} group={group} qtyEdits={qtyEdits} approved={approved}
-              onQty={editQuantity} onApprove={(lineId) => {
-                setApproved((previous) => ({ ...previous, [lineId]: !previous[lineId] }))
-                setNotice('')
-              }} onApproveGroup={approveGroup} disabled={busy} />
-          ))}
-        </>
+    <>
+      {retainedSession && (
+        <Workspace
+          key={`workspace:${retainedSession.user.id}`}
+          session={session || retainedSession}
+          active={Boolean(session)}
+          onAuthRequired={onAuthRequired}
+          onLogout={() => {
+            setSession(null)
+            setRetainedSession(null)
+            window.history.replaceState(null, '', '#/orders')
+          }}
+        />
       )}
-      {!result && !error && <div className="empty">{loading ? 'Рассчитываю рекомендации по данным поставщиков…' : 'Задайте параметры и нажмите «Рассчитать заказ».'}</div>}
-    </div>
+      {!session && (
+        <LoginPage
+          key={`login:${retainedSession?.user.id || 'initial'}`}
+          onLogin={onLogin}
+          expiredUser={retainedSession?.user}
+        />
+      )}
+    </>
   )
 }

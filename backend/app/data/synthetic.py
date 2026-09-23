@@ -16,7 +16,7 @@ import pandas as pd
 
 from app.data.adapter import Dataset
 
-RNG = np.random.default_rng(42)
+DEFAULT_AS_OF = date(2026, 9, 23)
 
 CATEGORIES = {
     "Кабельная продукция": ["Кабель ВВГ", "Кабель ПВС", "Провод СИП"],
@@ -46,14 +46,20 @@ def _seasonal_factor(day: date, amplitude: float, peak_month: int) -> float:
 class SyntheticDataSource:
     """Источник синтетических данных, совместимый с интерфейсом DataSource."""
 
-    def __init__(self, days: int = 730, seed: int = 42) -> None:
+    def __init__(self, days: int = 730, seed: int = 42, as_of: date | None = None) -> None:
+        if days < 1:
+            raise ValueError("Синтетическая история должна содержать хотя бы один день")
         self.days = days
+        self.seed = seed
+        self.as_of = as_of or DEFAULT_AS_OF
         self.rng = np.random.default_rng(seed)
 
     def load(self) -> Dataset:
+        # Repeated loads of one source must reproduce the same fixture, too.
+        self.rng = np.random.default_rng(self.seed)
         sku_defs = self._build_sku_catalog()
         sales, stockouts = self._build_sales(sku_defs)
-        stock = self._build_stock(sku_defs, sales)
+        stock = self._build_stock(sku_defs)
         in_transit = self._build_in_transit(sku_defs)
         suppliers = pd.DataFrame(
             SUPPLIERS, columns=["supplier_id", "name", "lead_time_days", "min_order_qty"]
@@ -69,6 +75,12 @@ class SyntheticDataSource:
             suppliers=suppliers,
             sku_suppliers=sku_suppliers,
             stockouts=stockouts,
+            catalog=pd.DataFrame(sku_defs)[["sku", "name", "category", "unit", "supplier_id"]],
+            as_of=self.as_of,
+            source="synthetic",
+            warnings=["Синтетические данные для проверки работы; не являются фактическими продажами или остатками компании."],
+            metadata={"seed": self.seed, "history_days": self.days,
+                      "transaction_end": (self.as_of - timedelta(days=1)).isoformat()},
         )
 
     # ---------- каталог SKU ----------
@@ -90,6 +102,7 @@ class SyntheticDataSource:
                 trend = float(self.rng.choice([0.0, 0.0, 0.0004, 0.0008]))  # устойчивый рост
                 defs.append({
                     "sku": sku, "name": name, "category": category,
+                    "unit": "м" if category == "Кабельная продукция" else "шт",
                     "supplier_id": supplier_id,
                     "base": base, "amp": amp, "peak": peak, "trend": trend,
                     "price": round(float(self.rng.uniform(200, 15000)), 2),
@@ -100,16 +113,17 @@ class SyntheticDataSource:
 
     # ---------- продажи + stockout ----------
     def _build_sales(self, sku_defs: list[dict]):
-        start = date.today() - timedelta(days=self.days)
+        start = self.as_of - timedelta(days=self.days)
         rows: list[dict] = []
         stockout_rows: list[dict] = []
         clients = [f"CL-{i:04d}" for i in range(1, 120)]
 
         for s in sku_defs:
             wh = WAREHOUSES[self.rng.integers(0, len(WAREHOUSES))]
+            s["warehouse"] = wh
             # запланируем 0-1 период stockout на позицию
             stockout_window = None
-            if self.rng.random() < 0.45:
+            if self.rng.random() < 0.45 and self.days > 100:
                 so_start_off = int(self.rng.integers(60, self.days - 40))
                 so_len = int(self.rng.integers(7, 25))
                 stockout_window = (so_start_off, so_start_off + so_len)
@@ -158,22 +172,22 @@ class SyntheticDataSource:
                     "price": s["price"], "client_id": big_client, "warehouse": wh,
                 })
 
-        sales = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
+        sales = pd.DataFrame(rows, columns=["date", "sku", "name", "category", "qty", "price", "client_id", "warehouse"])
+        sales = sales.sort_values("date").reset_index(drop=True)
         stockouts = pd.DataFrame(
             stockout_rows, columns=["sku", "warehouse", "start", "end"]
         )
         return sales, stockouts
 
     # ---------- текущие остатки ----------
-    def _build_stock(self, sku_defs: list[dict], sales: pd.DataFrame) -> pd.DataFrame:
+    def _build_stock(self, sku_defs: list[dict]) -> pd.DataFrame:
         rows = []
         for s in sku_defs:
-            wh = sales.loc[sales["sku"] == s["sku"], "warehouse"]
-            wh = wh.iloc[0] if len(wh) else WAREHOUSES[0]
+            wh = s["warehouse"]
             # часть позиций специально с низким остатком (срочные)
             days_cover = float(self.rng.choice([1, 3, 5, 10, 20, 45]))
             on_hand = round(s["base"] * days_cover, 0)
-            rows.append({"sku": s["sku"], "warehouse": wh, "on_hand": on_hand})
+            rows.append({"sku": s["sku"], "warehouse": wh, "on_hand": on_hand, "as_of": self.as_of})
         return pd.DataFrame(rows)
 
     # ---------- товары в пути ----------
@@ -183,8 +197,9 @@ class SyntheticDataSource:
             if self.rng.random() < 0.3:
                 rows.append({
                     "sku": s["sku"],
-                    "warehouse": WAREHOUSES[self.rng.integers(0, len(WAREHOUSES))],
+                    "warehouse": s["warehouse"],
                     "qty": round(s["base"] * float(self.rng.integers(5, 20)), 0),
-                    "eta": date.today() + timedelta(days=int(self.rng.integers(3, 30))),
+                    "eta": self.as_of + timedelta(days=int(self.rng.integers(3, 30))),
+                    "source_as_of": self.as_of,
                 })
-        return pd.DataFrame(rows, columns=["sku", "warehouse", "qty", "eta"])
+        return pd.DataFrame(rows, columns=["sku", "warehouse", "qty", "eta", "source_as_of"])

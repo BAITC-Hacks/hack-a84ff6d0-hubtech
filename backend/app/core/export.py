@@ -22,6 +22,10 @@ def _validate_quantity(line: OrderLine, decision: ExportLine) -> None:
         if decision.approved:
             raise ExportValidationError(f"{line.sku}: нельзя утвердить строку с нулевым количеством.")
         return
+    if decision.approved and (not line.unit.strip() or line.unit == 'ед. (не указана)'):
+        raise ExportValidationError(
+            f"{line.sku}: перед подтверждением заказа укажите достоверную единицу измерения в источнике и выполните расчёт заново."
+        )
     if quantity + 1e-8 < line.min_order_qty:
         raise ExportValidationError(
             f"{line.sku}: минимальное количество — {line.min_order_qty:g} {line.unit}"
@@ -60,7 +64,8 @@ def _select_lines(response: RecommendationResponse, request: ExportRequest | Non
     return selected
 
 
-def to_excel_bytes(response: RecommendationResponse, request: ExportRequest | None = None) -> bytes:
+def to_excel_bytes(response: RecommendationResponse, request: ExportRequest | None = None,
+                   *, order_metadata: dict | None = None) -> bytes:
     """Не загружает источники и не пересчитывает рекомендации."""
     selected = _select_lines(response, request)
     supplier_days = {group.supplier_id: group.lead_time_days for group in response.groups}
@@ -121,6 +126,7 @@ def to_excel_bytes(response: RecommendationResponse, request: ExportRequest | No
         ("Режим экспорта", "Только утверждённые" if request and request.approved_only else "Черновик"),
         ("Количество позиций", len(rows)),
     ]
+    settings_rows.extend((order_metadata or {}).items())
     settings_rows.extend(("Ограничение / допущение", warning) for warning in response.warnings)
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:

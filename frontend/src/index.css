@@ -1,22 +1,116 @@
+@import '@fontsource-variable/golos-text';
+@import '@fontsource-variable/caveat';
+
 :root {
-  --bg: #0f1420;
-  --panel: #171e2e;
-  --panel-2: #1e2740;
-  --line: #2a3350;
-  --text: #e6eaf2;
-  --muted: #94a0ba;
-  --accent: #4c8dff;
-  --accent-2: #35406b;
-  --danger: #ff5c72;
-  --warn: #ffb020;
-  --ok: #33c27f;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --primary-green: #bced00;
+  --bg-dark: #2a2a2b;
+  --text-main-black: #171918;
+  --bg-surface-white: #fff;
+  --bg-promo-light: #fbfbea;
+  --bg-selected-blue: #e5f2ff;
+  --accent-blue: #3a75df;
+  --text-muted: #a3a3a3;
+  --muted: #62665d;
+  --line: #e3e6db;
+  --danger: #a82f23;
+  --warn: #795016;
+  --ok: #345319;
+  --shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  font-family: 'Golos Text Variable', 'Segoe UI', sans-serif;
+  font-size: 16px;
+  color: var(--text-main-black);
+  background: var(--bg-dark);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
-
-* { box-sizing: border-box; }
-
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html {
+  scroll-padding-top: 24px;
+}
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  min-width: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+summary {
+  -webkit-tap-highlight-color: transparent;
+  outline-offset: 4px;
+}
+button,
+select,
+input {
+  min-height: 44px;
+}
+button {
+  cursor: pointer;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--accent-blue);
+}
+input[type='checkbox'] {
+  accent-color: #638400;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+button {
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+::selection {
+  background: var(--primary-green);
+  color: #000;
+}
+h1,
+h2,
+h3,
+p {
+  overflow-wrap: anywhere;
+}
+h1,
+h2,
+h3 {
+  line-height: 1.18;
+}
+p {
+  line-height: 1.65;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

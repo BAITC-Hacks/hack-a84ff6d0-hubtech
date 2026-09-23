@@ -15,6 +15,8 @@ from pydantic import ValidationError
 from app.core.export import ExportValidationError, to_excel_bytes
 from app.core.snapshots import load_snapshot, save_snapshot
 from app.main import app
+from app.repositories import create_order, create_user
+from app.storage import connection, migrate
 from app.schemas import (
     ExportLine, ExportRequest, OrderLine, Rationale, RecommendationResponse, SupplierGroup,
 )
@@ -46,11 +48,31 @@ class ExportTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        setting = patch.dict(os.environ, {"ORDER_DB_PATH": self.directory.name + "/orders.sqlite3"})
+        setting = patch.dict(os.environ, {"ORDER_DB_PATH": self.directory.name + "/orders.sqlite3",
+                                          "APP_DB_PATH": self.directory.name + "/orders.sqlite3",
+                                          "APP_ENV": "development", "APP_ORIGIN": ""})
         setting.start()
         self.addCleanup(setting.stop)
         self.snapshot = save_snapshot(example_response())
+        migrate()
+        self.user = create_user("export-admin", "export-test-password", "admin")
         self.client = TestClient(app)
+        self.addCleanup(self.client.close)
+        signed_in = self.client.post("/api/auth/login", json={"username": "export-admin", "password": "export-test-password"})
+        self.client.headers["X-CSRF-Token"] = signed_in.json()["csrf_token"]
+        self.order = self.client.get('/api/orders?archived=true').json()['items'][0]
+        response = self.client.patch(f"/api/orders/{self.order['id']}",
+                                     json={'revision': self.order['revision'], 'archived': False})
+        self.assertEqual(response.status_code, 200)
+        self.order = response.json()
+
+    def persist(self, request):
+        path = f"/api/orders/{self.order['id']}"
+        for _ in range(2):  # Quantity edits clear selection; confirm it after saving.
+            response = self.client.put(path, json={
+                'revision': self.order['revision'], 'lines': [line.model_dump() for line in request.lines]})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.order = response.json()
 
     def request(self, quantities=(25, 30), approved=(True, False), approved_only=False):
         return ExportRequest(
@@ -73,8 +95,9 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(load_snapshot(restored.calculation_id).groups[0].lines[0].recommended_qty, 20)
 
     def test_export_uses_snapshot_without_loading_data_or_recalculating(self):
+        self.persist(self.request())
         with patch("app.api.routes._load", side_effect=AssertionError("must not reload")), \
-             patch("app.api.routes.generate_recommendations", side_effect=AssertionError("must not recalculate")):
+             patch("app.jobs.generate_recommendations", side_effect=AssertionError("must not recalculate")):
             result = self.client.post("/api/recommend/export", json=self.request().model_dump())
         self.assertEqual(result.status_code, 200, result.text[:300] if result.status_code != 200 else "")
         wb, rows = self.rows(result.content)
@@ -85,6 +108,17 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(wb["Заказ поставщикам"]["F2"].data_type, "s")
         self.assertEqual(rows[0]["Наименование"], "=literal name")
         self.assertEqual(dict(list(wb["Параметры расчёта"].values)[1:])["ID расчёта"], self.snapshot.calculation_id)
+        metadata = dict(list(wb["Параметры расчёта"].values)[1:])
+        self.assertEqual(metadata['ID заказа'], self.order['id'])
+        self.assertEqual(metadata['Версия заказа'], self.order['revision'])
+
+    def test_legacy_export_cannot_bypass_saved_decisions(self):
+        response = self.client.post('/api/recommend/export', json=self.request().model_dump())
+        self.assertEqual(response.status_code, 409)
+        unchanged = self.client.get(f"/api/orders/{self.order['id']}").json()
+        self.assertTrue(all(line['quantity'] == 20 and not line['approved'] for line in unchanged['decisions']))
+        self.persist(self.request())
+        self.assertEqual(self.client.post('/api/recommend/export', json=self.request().model_dump()).status_code, 200)
 
     def test_approved_only_and_zero_override(self):
         _, rows = self.rows(to_excel_bytes(self.snapshot, self.request(approved_only=True)))
@@ -109,6 +143,13 @@ class ExportTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValidationError):
                 ExportLine(line_id="line", quantity=value)
 
+    def test_unknown_unit_allows_draft_but_cannot_be_confirmed(self):
+        self.snapshot.groups[0].lines[0].unit = 'ед. (не указана)'
+        with self.assertRaisesRegex(ExportValidationError, 'единицу измерения'):
+            to_excel_bytes(self.snapshot, self.request())
+        _, rows = self.rows(to_excel_bytes(self.snapshot, self.request(approved=(False, False))))
+        self.assertEqual(rows[0]['Ед. изм.'], 'ед. (не указана)')
+
     def test_duplicate_unknown_and_missing_ids_rejected(self):
         for mode in ("duplicate", "unknown", "missing"):
             request = self.request()
@@ -122,17 +163,20 @@ class ExportTests(unittest.TestCase):
                 result = self.client.post("/api/recommend/export", json=request.model_dump())
                 self.assertEqual(result.status_code, 422)
 
-    def test_missing_or_expired_snapshot_returns_actionable_error(self):
+    def test_missing_snapshot_errors_but_durable_order_does_not_expire(self):
+        self.persist(self.request())
         request = self.request()
         request.calculation_id = "unknown"
         self.assertEqual(self.client.post("/api/recommend/export", json=request.model_dump()).status_code, 410)
-        with patch("app.core.snapshots.time.time", return_value=10**12):
+        with patch("app.core.snapshots.RETENTION_SECONDS", -1):
             result = self.client.post("/api/recommend/export", json=self.request().model_dump())
-        self.assertEqual(result.status_code, 410)
+        self.assertEqual(result.status_code, 200)
 
     def test_recommend_returns_saved_calculation_id(self):
-        with patch("app.api.routes._load", return_value=object()), \
-             patch("app.api.routes.generate_recommendations", return_value=example_response()):
+        with connection(write=True) as db:
+            order_id = create_order(db, example_response(), self.user)
+        with patch("app.api.routes.jobs.enqueue", return_value={"job_id": "job", "status": "queued"}), \
+             patch("app.api.routes.jobs.get_job", return_value={"status": "completed", "order_id": order_id}):
             result = self.client.post("/api/recommend", json={"explain": False})
         self.assertEqual(result.status_code, 200)
         calculation_id = result.json()["calculation_id"]

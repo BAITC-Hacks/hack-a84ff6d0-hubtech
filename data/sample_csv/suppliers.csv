@@ -1,0 +1,3 @@
+supplier_id,name,lead_time_days,min_order_qty
+0001,Демо-поставщик кабеля,5,10
+0002,Демо-поставщик освещения,3,1

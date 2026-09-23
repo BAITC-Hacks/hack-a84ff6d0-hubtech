@@ -127,12 +127,14 @@ class RecommendationResponse(BaseModel):
 # ---------- Параметры запроса расчёта ----------
 
 class RecommendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     warehouse: Optional[str] = Field(default=None, description="Фильтр по складу")
     category: Optional[str] = Field(default=None, description="Фильтр по категории")
     product_category: Optional[str] = Field(default=None, description="Товарная группа из справочника ekt.kz; отдельно от категории 1С")
     service_level: Optional[float] = Field(default=None, ge=0.5, le=0.999)
     review_period_days: Optional[int] = Field(default=None, ge=1, le=120)
-    explain: bool = Field(default=True, description="Генерировать LLM-обоснования")
+    explain: bool = Field(default=False, description="Генерировать LLM-обоснования")
 
 
 class ExportLine(BaseModel):

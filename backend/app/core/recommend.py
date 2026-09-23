@@ -20,7 +20,7 @@ from app.core.explain import build_explanation
 from app.core.forecasting import forecast_demand, forecast_monthly_demand
 from app.core.outliers import exclude_bulk_orders
 from app.core.replenishment import compute_need
-from app.core.stockout import build_adjusted_series
+from app.core.stockout import build_adjusted_monthly, build_adjusted_series
 from app.data.adapter import Dataset
 from app.schemas import OrderLine, Rationale, RecommendationResponse, SupplierGroup
 
@@ -53,7 +53,7 @@ def _clean_text(value, fallback="") -> str:
 def generate_recommendations(
     ds: Dataset, warehouse: Optional[str] = None, category: Optional[str] = None,
     service_level: Optional[float] = None, review_period_days: Optional[int] = None,
-    explain: bool = True,
+    explain: bool = False,
     product_category: Optional[str] = None,
 ) -> RecommendationResponse:
     settings = get_settings()
@@ -82,7 +82,7 @@ def generate_recommendations(
     sales = ds.sales.copy()
     if not sales.empty:
         sales["date"] = pd.to_datetime(sales["date"]).dt.normalize()
-        sales = sales[sales["date"] < pd.Timestamp(today)]
+        sales = sales[sales["date"] <= pd.Timestamp(history_end)]
     monthly = getattr(ds, "monthly_sales", empty).copy()
     if not monthly.empty:
         monthly["month"] = pd.to_datetime(monthly["month"]).dt.to_period("M").dt.to_timestamp()
@@ -164,7 +164,15 @@ def generate_recommendations(
                 excluded_units = float(deduction.sum())
                 effective = excluded[excluded["month"].isin(deduction[deduction > 0].index)]
                 excluded_orders = int(effective["_bulk_order_key"].nunique())
-            fc = forecast_monthly_demand(month_qty, today, horizon_days, factors)
+            # Keep the monthly authority after bulk deductions. Timings from
+            # mismatched transaction reports must not alter that monthly volume.
+            adj_monthly = build_adjusted_monthly(
+                month_qty, stockout_groups.get((sku, wh), empty), history_end,
+                outl.regular, matched.index[matched],
+            )
+            uplift = adj_monthly.lost_demand_uplift
+            warnings.extend(adj_monthly.warnings)
+            fc = forecast_monthly_demand(adj_monthly.monthly, today, horizon_days, factors)
             warnings.append("Спрос рассчитан по завершённым месяцам; помесячные итоги — основной источник объёма, транзакции используются для поиска крупных заказов.")
             warnings.append("Дневная вариативность из месячных итогов неизвестна: страховой запас использует оценку Пуассона и разброс месячных среднесуточных значений.")
             last_month_end = (month_qty.index.max() + pd.offsets.MonthEnd(0)).date()
@@ -232,7 +240,10 @@ def generate_recommendations(
             excluded_bulk_units=round(excluded_units, 2), excluded_bulk_orders=excluded_orders,
             raw_need=need.raw_need,
         )
-        unit = _clean_text(info.get("unit", "ед."), "ед.")
+        unit = _clean_text(info.get("unit", "")).strip()
+        if not unit:
+            unit = "ед. (не указана)"
+            warnings.append("Единица измерения не указана в источнике. Перед заказом подтвердите единицу измерения у поставщика.")
         explanation = build_explanation(name, rationale, need.recommended_qty, need.urgency, use_llm=explain, unit=unit)
         line = OrderLine(
             line_id=f"{sku}::{wh}", sku=str(sku), supplier_sku=_clean_text(info.get("supplier_sku")) or None,

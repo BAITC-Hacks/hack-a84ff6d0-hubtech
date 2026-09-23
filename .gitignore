@@ -22,3 +22,6 @@ HackAlem AI_ Автоматизация формирования заказов 
 
 # Критерии оценки — только локально, в GitHub-репозиторий не попадают
 критерии/
+
+# Local browser screenshots and generated verification workbooks
+qa/artifacts/

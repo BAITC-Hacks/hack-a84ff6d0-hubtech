@@ -1,0 +1,770 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-09-23",
+  "last_complete_month": "2026-08",
+  "protocol": {
+    "horizon": "one complete calendar month, rolling origin",
+    "validation_months": [
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06"
+    ],
+    "test_months": [
+      "2026-07",
+      "2026-08"
+    ],
+    "historical_input": "only known monthly quantities with month < target month",
+    "external_seasonality": false,
+    "llm": false,
+    "model_fitting": false,
+    "parameter_search": false,
+    "forecast_code_modified_for_evaluation": false,
+    "test_is_sequential": "July actual can enter August history after July completes",
+    "target": "reported monthly net sales under explicit scenario policy; not latent demand",
+    "baseline_last_month": "previous calendar month quantity, no fallback or day-length scaling",
+    "baseline_same_month_last_year": "quantity of the same calendar month one year earlier, no fallback",
+    "short_history": "current runs with >=1 known month; <3 reported separately; no history means unavailable",
+    "units": "no combined raw MAE/WAPE across units; unit metadata does not enter prediction",
+    "zero_actual": "retained in MAE; WAPE/bias null when sum(actual)=0; zero-target MAE reported",
+    "comparison": "compare models within paired_* or common_all_models, not unequal available cohorts",
+    "scenarios": {
+      "unknown_blanks": "observed >=0 only; blanks/negative/invalid/absent remain unknown",
+      "operational_zero_assumption": "present blank=0 and negative net month clipped to 0; invalid/absent remain unknown"
+    },
+    "evaluated_scenarios": [
+      "unknown_blanks",
+      "operational_zero_assumption"
+    ]
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "pandas": "2.2.3",
+    "numpy": "1.26.4",
+    "openpyxl": "3.1.5"
+  },
+  "implementation": {
+    "scripts/backtest_forecast.py": "44d0c8f056fbf508512d2af7abd8b2803587a9c83d220ccbc26520e156b3af11",
+    "backend/app/core/forecasting.py": "8a25b5b860f2e80c378fbf141982c5184b04baeecc48040966248788aa6653e7",
+    "backend/app/data/excel.py": "49b7e7a4497d6e5cb8990e234ac09664382633de8438288456588aae100b95d7",
+    "scripts/prepare_ml_data.py": "e6a70b92f8b48cdd9f508055f715d86088649d6fd2629b4abc578b43aad8509c",
+    "scripts/clean_monthly_data.py": "da7929df5a920996f2881ce5253516e8ae1081456e470a9ac19a7dca673238c5"
+  },
+  "sources": {
+    "IEK": {
+      "monthly_sales": {
+        "path": "IEK/Ежемесячные продажи в количественном выражении за последние 2 года.xlsx",
+        "sha256": "048a0af940370153511769396570259a1bb28da63709d9b974f99c45081fa255",
+        "size_bytes": 360039
+      },
+      "unit_metadata_only": {
+        "path": "IEK/Ежемесячные остатки продукции за последние 2 года  ИЭК.xlsx",
+        "sha256": "ad8a8df9cbb242a3df60a147fb4011b146ca7cdd9e98c1247b1b19fd517f4a30",
+        "size_bytes": 438097
+      }
+    },
+    "SYSTEME": {
+      "monthly_sales": {
+        "path": "Systeme electric/Ежемесячные продажи в кол-м выражении SystemElectric 2024-2026.xlsx",
+        "sha256": "f7782ab9ea5c06d68526543953c6fce7ca83a80d1c1a4e8d88fd083de415f9d0",
+        "size_bytes": 132864
+      },
+      "unit_metadata_only": {
+        "path": "Systeme electric/Ежемесячные остатки SystemElectric 2024-2026.xlsx",
+        "sha256": "45d55eb244966ef9fdba1aa09c666e9dbc4c0b05c1088f4041edcd86b908c85e",
+        "size_bytes": 152681
+      }
+    }
+  },
+  "source_profiles": {
+    "IEK": {
+      "sales_skus": 2463,
+      "sales_cells": 81279,
+      "first_source_month": "2024-01-01",
+      "last_source_month": "2026-09-01",
+      "raw_sales_status_counts": {
+        "observed": 36412,
+        "blank": 44626,
+        "negative": 241
+      },
+      "unit_counts_sales_skus": {
+        "м": 137,
+        "шт": 2229,
+        "упак": 89,
+        "": 7,
+        "компл": 1
+      },
+      "stock_only_skus_not_evaluated": 397,
+      "issue_counts": {
+        "negative_quantity_preserved": 241
+      }
+    },
+    "SYSTEME": {
+      "sales_skus": 554,
+      "sales_cells": 18282,
+      "first_source_month": "2024-01-01",
+      "last_source_month": "2026-09-01",
+      "raw_sales_status_counts": {
+        "blank": 7105,
+        "observed": 10854,
+        "negative": 323
+      },
+      "unit_counts_sales_skus": {
+        "шт": 554
+      },
+      "stock_only_skus_not_evaluated": 147,
+      "issue_counts": {
+        "negative_quantity_preserved": 323
+      }
+    }
+  },
+  "coverage": [
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "test",
+      "unit": "",
+      "candidate_rows": 14,
+      "candidate_skus": 7,
+      "raw_target_status_counts": {
+        "blank": 13,
+        "observed": 1
+      },
+      "known_targets": 14,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 13,
+      "positive_targets_after_policy": 1,
+      "unknown_unit_excluded": 14,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 14,
+        "last_month": 14,
+        "same_month_last_year": 14
+      },
+      "common_all_models_pairs": 14,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "test",
+      "unit": "компл",
+      "candidate_rows": 2,
+      "candidate_skus": 1,
+      "raw_target_status_counts": {
+        "blank": 2
+      },
+      "known_targets": 2,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 2,
+      "positive_targets_after_policy": 0,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 2,
+        "last_month": 2,
+        "same_month_last_year": 2
+      },
+      "common_all_models_pairs": 2,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "test",
+      "unit": "м",
+      "candidate_rows": 274,
+      "candidate_skus": 137,
+      "raw_target_status_counts": {
+        "observed": 131,
+        "blank": 143
+      },
+      "known_targets": 274,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 143,
+      "positive_targets_after_policy": 131,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 274,
+        "last_month": 274,
+        "same_month_last_year": 274
+      },
+      "common_all_models_pairs": 274,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "test",
+      "unit": "упак",
+      "candidate_rows": 178,
+      "candidate_skus": 89,
+      "raw_target_status_counts": {
+        "blank": 86,
+        "observed": 92
+      },
+      "known_targets": 178,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 86,
+      "positive_targets_after_policy": 92,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 178,
+        "last_month": 178,
+        "same_month_last_year": 178
+      },
+      "common_all_models_pairs": 178,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "test",
+      "unit": "шт",
+      "candidate_rows": 4458,
+      "candidate_skus": 2229,
+      "raw_target_status_counts": {
+        "blank": 2457,
+        "observed": 1995,
+        "negative": 6
+      },
+      "known_targets": 4458,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 2463,
+      "positive_targets_after_policy": 1995,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 4458,
+        "last_month": 4458,
+        "same_month_last_year": 4458
+      },
+      "common_all_models_pairs": 4458,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "validation",
+      "unit": "",
+      "candidate_rows": 42,
+      "candidate_skus": 7,
+      "raw_target_status_counts": {
+        "blank": 42
+      },
+      "known_targets": 42,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 42,
+      "positive_targets_after_policy": 0,
+      "unknown_unit_excluded": 42,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 42,
+        "last_month": 42,
+        "same_month_last_year": 42
+      },
+      "common_all_models_pairs": 42,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "validation",
+      "unit": "компл",
+      "candidate_rows": 6,
+      "candidate_skus": 1,
+      "raw_target_status_counts": {
+        "blank": 6
+      },
+      "known_targets": 6,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 6,
+      "positive_targets_after_policy": 0,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 6,
+        "last_month": 6,
+        "same_month_last_year": 6
+      },
+      "common_all_models_pairs": 6,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "validation",
+      "unit": "м",
+      "candidate_rows": 822,
+      "candidate_skus": 137,
+      "raw_target_status_counts": {
+        "observed": 442,
+        "blank": 378,
+        "negative": 2
+      },
+      "known_targets": 822,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 380,
+      "positive_targets_after_policy": 442,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 822,
+        "last_month": 822,
+        "same_month_last_year": 822
+      },
+      "common_all_models_pairs": 822,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "validation",
+      "unit": "упак",
+      "candidate_rows": 534,
+      "candidate_skus": 89,
+      "raw_target_status_counts": {
+        "blank": 289,
+        "observed": 245
+      },
+      "known_targets": 534,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 289,
+      "positive_targets_after_policy": 245,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 534,
+        "last_month": 534,
+        "same_month_last_year": 534
+      },
+      "common_all_models_pairs": 534,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "operational_zero_assumption",
+      "split": "validation",
+      "unit": "шт",
+      "candidate_rows": 13374,
+      "candidate_skus": 2229,
+      "raw_target_status_counts": {
+        "observed": 5558,
+        "blank": 7782,
+        "negative": 34
+      },
+      "known_targets": 13374,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 7816,
+      "positive_targets_after_policy": 5558,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 13374,
+        "last_month": 13374,
+        "same_month_last_year": 13374
+      },
+      "common_all_models_pairs": 13374,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "test",
+      "unit": "",
+      "candidate_rows": 14,
+      "candidate_skus": 7,
+      "raw_target_status_counts": {
+        "blank": 13,
+        "observed": 1
+      },
+      "known_targets": 1,
+      "known_target_fraction": 0.07142857142857142,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 1,
+      "unknown_unit_excluded": 14,
+      "known_targets_without_history": 1,
+      "short_history_known_targets": 1,
+      "available_pairs": {
+        "current": 0,
+        "last_month": 0,
+        "same_month_last_year": 0
+      },
+      "common_all_models_pairs": 0,
+      "common_all_models_fraction_of_candidates": 0.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "test",
+      "unit": "компл",
+      "candidate_rows": 2,
+      "candidate_skus": 1,
+      "raw_target_status_counts": {
+        "blank": 2
+      },
+      "known_targets": 0,
+      "known_target_fraction": 0.0,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 0,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 0,
+        "last_month": 0,
+        "same_month_last_year": 0
+      },
+      "common_all_models_pairs": 0,
+      "common_all_models_fraction_of_candidates": 0.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "test",
+      "unit": "м",
+      "candidate_rows": 274,
+      "candidate_skus": 137,
+      "raw_target_status_counts": {
+        "observed": 131,
+        "blank": 143
+      },
+      "known_targets": 131,
+      "known_target_fraction": 0.4781021897810219,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 131,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 131,
+        "last_month": 107,
+        "same_month_last_year": 119
+      },
+      "common_all_models_pairs": 102,
+      "common_all_models_fraction_of_candidates": 0.3722627737226277
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "test",
+      "unit": "упак",
+      "candidate_rows": 178,
+      "candidate_skus": 89,
+      "raw_target_status_counts": {
+        "blank": 86,
+        "observed": 92
+      },
+      "known_targets": 92,
+      "known_target_fraction": 0.5168539325842697,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 92,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 1,
+      "short_history_known_targets": 2,
+      "available_pairs": {
+        "current": 91,
+        "last_month": 73,
+        "same_month_last_year": 73
+      },
+      "common_all_models_pairs": 67,
+      "common_all_models_fraction_of_candidates": 0.37640449438202245
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "test",
+      "unit": "шт",
+      "candidate_rows": 4458,
+      "candidate_skus": 2229,
+      "raw_target_status_counts": {
+        "blank": 2457,
+        "observed": 1995,
+        "negative": 6
+      },
+      "known_targets": 1995,
+      "known_target_fraction": 0.4475100942126514,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 1995,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 29,
+      "short_history_known_targets": 106,
+      "available_pairs": {
+        "current": 1966,
+        "last_month": 1529,
+        "same_month_last_year": 1473
+      },
+      "common_all_models_pairs": 1254,
+      "common_all_models_fraction_of_candidates": 0.2812920592193809
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "validation",
+      "unit": "",
+      "candidate_rows": 42,
+      "candidate_skus": 7,
+      "raw_target_status_counts": {
+        "blank": 42
+      },
+      "known_targets": 0,
+      "known_target_fraction": 0.0,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 0,
+      "unknown_unit_excluded": 42,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 0,
+        "last_month": 0,
+        "same_month_last_year": 0
+      },
+      "common_all_models_pairs": 0,
+      "common_all_models_fraction_of_candidates": 0.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "validation",
+      "unit": "компл",
+      "candidate_rows": 6,
+      "candidate_skus": 1,
+      "raw_target_status_counts": {
+        "blank": 6
+      },
+      "known_targets": 0,
+      "known_target_fraction": 0.0,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 0,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 0,
+        "last_month": 0,
+        "same_month_last_year": 0
+      },
+      "common_all_models_pairs": 0,
+      "common_all_models_fraction_of_candidates": 0.0
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "validation",
+      "unit": "м",
+      "candidate_rows": 822,
+      "candidate_skus": 137,
+      "raw_target_status_counts": {
+        "observed": 442,
+        "blank": 378,
+        "negative": 2
+      },
+      "known_targets": 442,
+      "known_target_fraction": 0.537712895377129,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 442,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 2,
+      "short_history_known_targets": 6,
+      "available_pairs": {
+        "current": 440,
+        "last_month": 367,
+        "same_month_last_year": 363
+      },
+      "common_all_models_pairs": 323,
+      "common_all_models_fraction_of_candidates": 0.3929440389294404
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "validation",
+      "unit": "упак",
+      "candidate_rows": 534,
+      "candidate_skus": 89,
+      "raw_target_status_counts": {
+        "blank": 289,
+        "observed": 245
+      },
+      "known_targets": 245,
+      "known_target_fraction": 0.45880149812734083,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 245,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 2,
+      "short_history_known_targets": 7,
+      "available_pairs": {
+        "current": 243,
+        "last_month": 187,
+        "same_month_last_year": 194
+      },
+      "common_all_models_pairs": 171,
+      "common_all_models_fraction_of_candidates": 0.3202247191011236
+    },
+    {
+      "supplier": "IEK",
+      "scenario": "unknown_blanks",
+      "split": "validation",
+      "unit": "шт",
+      "candidate_rows": 13374,
+      "candidate_skus": 2229,
+      "raw_target_status_counts": {
+        "observed": 5558,
+        "blank": 7782,
+        "negative": 34
+      },
+      "known_targets": 5558,
+      "known_target_fraction": 0.41558247345595933,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 5558,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 75,
+      "short_history_known_targets": 270,
+      "available_pairs": {
+        "current": 5483,
+        "last_month": 4198,
+        "same_month_last_year": 4113
+      },
+      "common_all_models_pairs": 3510,
+      "common_all_models_fraction_of_candidates": 0.26244952893674295
+    },
+    {
+      "supplier": "SYSTEME",
+      "scenario": "operational_zero_assumption",
+      "split": "test",
+      "unit": "шт",
+      "candidate_rows": 1108,
+      "candidate_skus": 554,
+      "raw_target_status_counts": {
+        "observed": 663,
+        "blank": 434,
+        "negative": 11
+      },
+      "known_targets": 1108,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 445,
+      "positive_targets_after_policy": 663,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 1108,
+        "last_month": 1108,
+        "same_month_last_year": 1108
+      },
+      "common_all_models_pairs": 1108,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "SYSTEME",
+      "scenario": "operational_zero_assumption",
+      "split": "validation",
+      "unit": "шт",
+      "candidate_rows": 3324,
+      "candidate_skus": 554,
+      "raw_target_status_counts": {
+        "observed": 1879,
+        "blank": 1367,
+        "negative": 78
+      },
+      "known_targets": 3324,
+      "known_target_fraction": 1.0,
+      "zero_targets_after_policy": 1445,
+      "positive_targets_after_policy": 1879,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 0,
+      "short_history_known_targets": 0,
+      "available_pairs": {
+        "current": 3324,
+        "last_month": 3324,
+        "same_month_last_year": 3324
+      },
+      "common_all_models_pairs": 3324,
+      "common_all_models_fraction_of_candidates": 1.0
+    },
+    {
+      "supplier": "SYSTEME",
+      "scenario": "unknown_blanks",
+      "split": "test",
+      "unit": "шт",
+      "candidate_rows": 1108,
+      "candidate_skus": 554,
+      "raw_target_status_counts": {
+        "observed": 663,
+        "blank": 434,
+        "negative": 11
+      },
+      "known_targets": 663,
+      "known_target_fraction": 0.5983754512635379,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 663,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 1,
+      "short_history_known_targets": 8,
+      "available_pairs": {
+        "current": 662,
+        "last_month": 542,
+        "same_month_last_year": 533
+      },
+      "common_all_models_pairs": 479,
+      "common_all_models_fraction_of_candidates": 0.4323104693140794
+    },
+    {
+      "supplier": "SYSTEME",
+      "scenario": "unknown_blanks",
+      "split": "validation",
+      "unit": "шт",
+      "candidate_rows": 3324,
+      "candidate_skus": 554,
+      "raw_target_status_counts": {
+        "observed": 1879,
+        "blank": 1367,
+        "negative": 78
+      },
+      "known_targets": 1879,
+      "known_target_fraction": 0.5652827918170878,
+      "zero_targets_after_policy": 0,
+      "positive_targets_after_policy": 1879,
+      "unknown_unit_excluded": 0,
+      "known_targets_without_history": 8,
+      "short_history_known_targets": 18,
+      "available_pairs": {
+        "current": 1871,
+        "last_month": 1546,
+        "same_month_last_year": 1549
+      },
+      "common_all_models_pairs": 1362,
+      "common_all_models_fraction_of_candidates": 0.40974729241877256
+    }
+  ],
+  "artifacts": {
+    "metrics": "forecast_metrics.csv",
+    "prediction_rows_written": false,
+    "prediction_rows_evaluated": 48272,
+    "metric_rows": 180
+  },
+  "limitations": [
+    "No pre-existing point-in-time snapshots: retrospective matrices may contain later corrections and survivorship bias.",
+    "Monthly report warehouse and unit mapping need partner confirmation; unit catalogue is current metadata, not a historical snapshot.",
+    "The explicit last-complete-month boundary is a reproducible assumption, not proof of accounting completeness.",
+    "Blank-as-zero is unconfirmed; unknown-only scoring selects months with known sales and is not whole-assortment accuracy.",
+    "Launch/discontinuation dates are unavailable; blank-as-zero can create pre-launch zero months.",
+    "Returns, stockouts and wholesale clients are not identified here; this scores forecast_monthly_demand directly, not the full ordering pipeline.",
+    "Only two held-out months; no confidence interval, business ROI or general production accuracy is claimed.",
+    "Separate validation/test is implemented; historical development may already have inspected these source files. This is not a blinded prospective trial.",
+    "No ML model is trained. Algorithms are not selected or tuned by this script. Subsequent changes must report this test reuse and reserve a new future holdout."
+  ]
+}

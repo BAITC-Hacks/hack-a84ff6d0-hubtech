@@ -8,6 +8,7 @@ import pandas as pd
 
 from app.data.adapter import Dataset
 from app.main import app
+from app.security import current_session
 
 
 def dataset():
@@ -30,8 +31,10 @@ def dataset():
 
 class WarehouseMetadataTests(unittest.TestCase):
     def metadata(self, ds):
-        with TestClient(app) as client, patch("app.api.routes._load", return_value=ds):
-            response = client.get("/api/meta")
+        # Authentication is covered in test_service; this tests metadata only.
+        with patch.dict(app.dependency_overrides, {current_session: lambda: {'user': {'id': 'metadata-test'}}}):
+            with patch('app.main.migrate'), TestClient(app) as client, patch("app.api.routes._load", return_value=ds):
+                response = client.get("/api/meta")
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()
 

@@ -15,6 +15,7 @@ from functools import lru_cache
 import math
 from pathlib import Path
 import re
+from threading import RLock
 
 import openpyxl
 import pandas as pd
@@ -414,6 +415,9 @@ class _Importer:
         )
 
 
+_IMPORT_LOCK = RLock()
+
+
 @lru_cache(maxsize=2)
 def _cached_load(root: str, fingerprints: tuple, as_of: date | None, lead_times: tuple[int, int]):
     return _Importer(Path(root), as_of, lead_times).load()
@@ -435,7 +439,11 @@ class ExcelDataSource:
             raise ValueError("Не найдены исходные Excel-файлы: " + ", ".join(missing))
         fingerprints = tuple((str(path), path.stat().st_mtime_ns, path.stat().st_size) for path in paths)
         # Recommendation filters and detection flags must not mutate cached frames.
-        dataset = deepcopy(_cached_load(str(self.root), fingerprints, self.as_of, self.lead_times))
+        # Concurrent cold requests share a single workbook import. Return separate
+        # frames so filters/calculations cannot mutate another request's data.
+        with _IMPORT_LOCK:
+            cached = _cached_load(str(self.root), fingerprints, self.as_of, self.lead_times)
+        dataset = deepcopy(cached)
         # Enrichment is outside the workbook cache: a changed/missing JSON file
         # must immediately change coverage without rebuilding the XLSX dataset.
         from app.config import get_settings

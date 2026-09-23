@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from datetime import date
+from concurrent.futures import ThreadPoolExecutor
 import os
 from pathlib import Path
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 from xml.sax.saxutils import escape
@@ -14,6 +16,7 @@ import pandas as pd
 
 from app.config import PROJECT_ROOT, Settings
 from app.data.excel import ExcelDataSource, MONTH_NAMES, SUPPLIER_FILES, normalize_code, parse_eta, parse_number
+from app.data.excel import _cached_load, _Importer
 
 
 def write_fixture(path, rows, dimension="A1:B2"):
@@ -161,6 +164,19 @@ class ExcelImportTest(unittest.TestCase):
         write_fixture(path, [["№", "Код 1с", "Артикул поставщика", "Наименование", "Мин. разр. к отгр."],
                              [1, "0001_", "IEK-01", "Товар", 24]])
         self.assertEqual(source.load().sku_suppliers.set_index("sku").loc["0001_", "min_order_qty"], 24)
+
+    def test_concurrent_cold_import_only_reads_workbooks_once(self):
+        _cached_load.cache_clear()
+        original = _Importer.load
+        def slow_load(importer):
+            time.sleep(0.05)
+            return original(importer)
+        with patch.object(_Importer, 'load', autospec=True, side_effect=slow_load) as loader:
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                results = list(pool.map(lambda _: ExcelDataSource(self.root).load(), range(4)))
+        self.assertEqual(loader.call_count, 1)
+        self.assertEqual(len(results), 4)
+        self.assertIsNot(results[0], results[1])
 
     def test_missing_workbook_does_not_fall_back_to_demo(self):
         spec = SUPPLIER_FILES["IEK"]

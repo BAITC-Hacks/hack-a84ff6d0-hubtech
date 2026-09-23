@@ -11,7 +11,7 @@ from app.core.forecasting import Forecast, _trend_slope_per_day, forecast_demand
 from app.core.outliers import exclude_bulk_orders
 from app.core.recommend import generate_recommendations
 from app.core.replenishment import compute_need
-from app.core.stockout import build_adjusted_series
+from app.core.stockout import build_adjusted_monthly, build_adjusted_series
 from app.data.adapter import Dataset
 
 
@@ -38,6 +38,18 @@ def lines(ds, **kwargs):
 
 
 class CalculationTests(unittest.TestCase):
+    def test_missing_unit_is_explicit_without_changing_known_units(self):
+        for unit in ("", "  ", None, "м", "ед."):
+            ds = dataset()
+            ds.catalog = pd.DataFrame([dict(sku="S1", name="Товар", category="C", unit=unit)])
+            line = lines(ds)["A"]
+            if unit in ("м", "ед."):
+                self.assertEqual(line.unit, unit)
+                self.assertFalse(any("Единица измерения не указана" in warning for warning in line.warnings))
+            else:
+                self.assertEqual(line.unit, "ед. (не указана)")
+                self.assertTrue(any("Единица измерения не указана" in warning for warning in line.warnings))
+
     def test_intraday_sales_are_grouped_and_today_is_excluded(self):
         ds = dataset()
         ds.sales["date"] += pd.Timedelta(hours=14)
@@ -144,6 +156,109 @@ class CalculationTests(unittest.TestCase):
         doc["document_id"] = [f"R{i}" for i in range(10)] + ["BULK"] * 10
         self.assertEqual(exclude_bulk_orders(doc).excluded_units, 200)
 
+    def test_customer_bulk_split_across_documents_is_excluded_once(self):
+        rows = [dict(date=pd.Timestamp("2026-01-01") + pd.Timedelta(days=i), qty=10, client_id="C")
+                for i in range(10)]
+        rows += [dict(date=pd.Timestamp("2026-01-20"), qty=20, client_id="B") for _ in range(10)]
+        tx = pd.DataFrame(rows)
+        for documents in ([f"D{i}" for i in range(20)], [f"D{i}" for i in range(10)] + ["BULK"] * 10):
+            tx["order_id"] = documents
+            result = exclude_bulk_orders(tx)
+            self.assertEqual(result.excluded_units, 200)
+            self.assertEqual(result.excluded_orders, 1)
+            self.assertEqual(result.regular["qty"].sum(), 100)
+            self.assertEqual(len(result.regular) + len(result.excluded), len(tx))
+
+    def test_customer_and_document_detections_form_union(self):
+        tx = pd.DataFrame([dict(date="2026-01-01", qty=10, client_id=f"C{i}", order_id=f"D{i}")
+                           for i in range(20)] +
+                          [dict(date="2026-01-02", qty=20, client_id="B", order_id=f"B{i}")
+                           for i in range(10)] +
+                          [dict(date="2026-01-03", qty=20, client_id=f"X{i}", order_id="BULK")
+                           for i in range(10)] +
+                          [dict(date="2026-01-02", qty=-5, client_id="B", order_id="RETURN")])
+        result = exclude_bulk_orders(tx)
+        self.assertEqual(result.excluded_units, 400)
+        self.assertEqual(result.excluded_orders, 2)
+        self.assertEqual(result.regular["qty"].sum(), 195)
+
+    def test_short_client_history_is_not_inflated_by_document_count(self):
+        tx = pd.DataFrame([dict(date="2026-01-01", qty=10, client_id="C", order_id=f"D{i}")
+                           for i in range(10)] +
+                          [dict(date="2026-01-02", qty=20, client_id="B", order_id=f"B{i}")
+                           for i in range(10)])
+        self.assertEqual(exclude_bulk_orders(tx).excluded_units, 0)
+
+    def test_bulk_thresholds_do_not_mix_skus_or_warehouses(self):
+        rows = [dict(date="2026-01-01", sku="S1", warehouse="A", qty=10, client_id=f"C{i}")
+                for i in range(10)]
+        rows += [dict(date="2026-01-01", sku=sku, warehouse=wh, qty=1000, client_id="ONLY")
+                 for sku, wh in (("S2", "A"), ("S1", "B"))]
+        self.assertEqual(exclude_bulk_orders(pd.DataFrame(rows)).excluded_units, 0)
+
+    def test_monthly_stockout_restores_missing_volume_and_keeps_warehouses_separate(self):
+        ds = dataset(as_of=date(2026, 6, 1), warehouses=("A", "B"))
+        ds.sales = pd.concat([pd.DataFrame(dict(date=pd.date_range("2026-01-01", "2026-05-31"),
+                              sku="S1", warehouse=wh, name="Товар", category="C", qty=10., client_id="C"))
+                              for wh in ("A", "B")], ignore_index=True)
+        remove = ds.sales.warehouse.eq("A") & ds.sales.date.between("2026-05-01", "2026-05-20")
+        ds.sales = ds.sales[~remove]
+        ds.monthly_sales = (ds.sales.assign(month=ds.sales.date.dt.to_period("M").dt.to_timestamp())
+                            .groupby(["sku", "warehouse", "month"], as_index=False)["qty"].sum())
+        before = lines(ds)
+        ds.stockouts = pd.DataFrame([dict(sku="S1", warehouse="A", start="2026-05-01", end="2026-05-20"),
+                                    dict(sku="S1", warehouse="A", start="2026-05-05", end="2026-05-15"),
+                                    dict(sku="S1", warehouse="B", start="2026-06-01", end="2026-12-31")])
+        after = lines(ds)
+        self.assertEqual(before["A"].recommended_qty, 40)
+        self.assertEqual(after["A"].recommended_qty, 70)
+        self.assertEqual(after["A"].rationale.lost_demand_uplift, 200)
+        self.assertEqual(after["B"].recommended_qty, before["B"].recommended_qty)
+        self.assertEqual(after["B"].rationale.lost_demand_uplift, 0)
+
+    def test_monthly_stockout_subtracts_sales_observed_during_absence(self):
+        qty = pd.Series([260.], index=pd.to_datetime(["2026-05-01"]))
+        tx = pd.DataFrame({"date": pd.date_range("2026-05-01", "2026-05-31"), "qty": [5.] * 10 + [10.] * 21})
+        periods = pd.DataFrame([dict(start="2026-05-01", end="2026-05-10")])
+        result = build_adjusted_monthly(qty, periods, date(2026, 5, 31), tx, qty.index)
+        self.assertEqual(result.monthly.iloc[0], 310)
+        self.assertEqual(result.lost_demand_uplift, 50)
+
+    def test_month_only_stockout_has_explicit_assumption_and_ignores_unreconciled_timing(self):
+        qty = pd.Series([110.], index=pd.to_datetime(["2026-05-01"]))
+        periods = pd.DataFrame([dict(start="2026-05-01", end="2026-05-20")])
+        tx = pd.DataFrame([dict(date="2026-05-01", qty=100000.)])
+        result = build_adjusted_monthly(qty, periods, date(2026, 5, 31), tx, pd.Index([]))
+        self.assertEqual(result.monthly.iloc[0], 310)
+        self.assertEqual(result.lost_demand_uplift, 200)
+        self.assertTrue(any("предполагает" in warning for warning in result.warnings))
+
+    def test_complete_month_stockout_uses_past_only_and_does_not_cascade_imputation(self):
+        qty = pd.Series([310., 0., 0., 3000.], index=pd.date_range("2026-01-01", periods=4, freq="MS"))
+        periods = pd.DataFrame([dict(start="2026-02-01", end="2026-03-31")])
+        result = build_adjusted_monthly(qty, periods, date(2026, 4, 30))
+        self.assertEqual(result.monthly.loc["2026-02-01"], 280)
+        self.assertEqual(result.monthly.loc["2026-03-01"], 310)
+        self.assertEqual(result.lost_demand_uplift, 590)
+        self.assertTrue(any("медиана" in warning for warning in result.warnings))
+        qty.iloc[-1] = 300000.
+        changed = build_adjusted_monthly(qty, periods, date(2026, 4, 30))
+        self.assertEqual(changed.lost_demand_uplift, 590)
+
+    def test_complete_month_stockout_without_earlier_demand_is_not_invented(self):
+        qty = pd.Series([0., 2800.], index=pd.date_range("2026-01-01", periods=2, freq="MS"))
+        periods = pd.DataFrame([dict(start="2026-01-01", end="2026-01-31")])
+        result = build_adjusted_monthly(qty, periods, date(2026, 2, 28))
+        self.assertEqual(result.lost_demand_uplift, 0)
+        self.assertTrue(any("не компенсирован" in warning for warning in result.warnings))
+
+    def test_stockout_partial_and_future_months_do_not_leak(self):
+        qty = pd.Series([310., 0., 0.], index=pd.date_range("2026-01-01", periods=3, freq="MS"))
+        periods = pd.DataFrame([dict(start="2026-02-01", end="2026-03-31")])
+        result = build_adjusted_monthly(qty, periods, date(2026, 2, 15))
+        self.assertEqual(result.monthly.to_list(), [310])
+        self.assertEqual(result.lost_demand_uplift, 0)
+
     def test_trend_has_daily_rate_units(self):
         daily = pd.Series(np.arange(100, dtype=float) + 100, index=pd.date_range("2025-01-01", periods=100))
         self.assertAlmostEqual(_trend_slope_per_day(daily), 1.0, places=7)
@@ -232,6 +347,23 @@ class CalculationTests(unittest.TestCase):
         ])
         line = lines(ds)["A"]
         self.assertEqual(line.rationale.avg_daily_demand, 10)
+
+    def test_transactions_after_confirmed_history_cannot_change_bulk_detection(self):
+        ds = dataset(as_of=date(2026, 7, 1))
+        ds.metadata["transaction_end"] = "2026-05-31"
+        ds.sales = ds.sales.iloc[:11].copy()
+        ds.sales["date"] = pd.date_range("2026-05-01", periods=11)
+        ds.sales["client_id"] = [f"C{i}" for i in range(11)]
+        ds.sales.loc[ds.sales.index[-1], "qty"] = 600
+        ds.monthly_sales = pd.DataFrame([dict(sku="S1", warehouse="A", month="2026-05-01", qty=700)])
+        before = lines(ds)["A"]
+        later = pd.concat([ds.sales.assign(date=pd.Timestamp("2026-06-01") + pd.Timedelta(days=i), qty=10000.)
+                           for i in range(20)], ignore_index=True)
+        ds.sales = pd.concat([ds.sales, later], ignore_index=True)
+        after = lines(ds)["A"]
+        self.assertEqual(before.rationale.excluded_bulk_units, 600)
+        self.assertEqual(after.rationale.excluded_bulk_units, 600)
+        self.assertEqual(before.recommended_qty, after.recommended_qty)
 
     def test_future_transit_snapshot_does_not_leak_into_historical_calculation(self):
         ds = dataset()
