@@ -94,6 +94,18 @@ backend/.venv/bin/python scripts/backtest_forecast.py
 
 ## Быстрый запуск
 
+### Через Docker (одна команда, рекомендуется для проверки)
+
+Нужен только **Docker** с плагином **Compose**:
+
+```bash
+docker compose up --build
+```
+
+Откройте [localhost:5173](http://localhost:5173), вход **`admin` / `admin`**. Автоматически поднимаются API, worker, SQLite, фронтенд и включённые данные партнёра (`init` применяет миграции и создаёт администратора). Ключ OpenAI не обязателен. Подробнее и параметры — в [DEPLOY.md](docs/DEPLOY.md), раздел 0.
+
+### Локально (без Docker)
+
 Нужны **Python 3.12**, **Node.js 22.19+ в ветке 22.x или 24.x** и npm. 1С, ключ OpenAI и доступ к ekt.kz для расчёта по готовым файлам не обязательны. Используйте закреплённые зависимости; подробнее локальная установка и Linux/systemd/nginx описаны в [DEPLOY.md](docs/DEPLOY.md).
 
 Из корня проекта:

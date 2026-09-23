@@ -1,0 +1,72 @@
+# Запуск всего проекта одной командой:
+#   docker compose up --build
+# Затем открыть http://localhost:5173  (вход: admin / admin)
+#
+# Архитектура: API (FastAPI) + worker (обработка расчётов) делят одну SQLite
+# на общем томе; init выполняет миграцию БД и создаёт администратора.
+services:
+  # Разовая инициализация: миграция схемы + создание администратора.
+  init:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: ekt-backend
+    environment:
+      - APP_DB_PATH=/data/app.sqlite3
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+    volumes:
+      - dbdata:/data
+    command: >
+      sh -c "python -m app.manage migrate &&
+             (python -m app.manage create-admin --username admin --password-env ADMIN_PASSWORD || true)"
+    restart: "no"
+
+  # API: принимает запросы, ставит расчёты в очередь, отдаёт результат и Excel.
+  backend:
+    image: ekt-backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - APP_DB_PATH=/data/app.sqlite3
+      - APP_ENV=development                 # локальный HTTP (cookie без Secure)
+      - APP_ORIGIN=http://localhost:5173    # origin браузера для проверки CSRF
+      - DATA_SOURCE=excel
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}  # необязателен: без ключа — обоснования по шаблону
+    volumes:
+      - dbdata:/data
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    ports:
+      - "8017:8017"
+
+  # Worker: обрабатывает очередь расчётов и пишет heartbeat в БД.
+  worker:
+    image: ekt-backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - APP_DB_PATH=/data/app.sqlite3
+      - DATA_SOURCE=excel
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - dbdata:/data
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    command: ["python", "-m", "app.worker"]
+
+  # Frontend: nginx отдаёт собранный React и проксирует /api → backend.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  dbdata:

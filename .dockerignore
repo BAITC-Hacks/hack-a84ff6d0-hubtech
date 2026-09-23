@@ -1,0 +1,15 @@
+# Ускоряет сборку и уменьшает образ. Тяжёлые генерируемые таблицы в образ не нужны.
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/*.pyc
+.git
+.gitignore
+data/ml
+data/clean
+qa
+критерии
+template
+*.md
+!backend/requirements.txt
