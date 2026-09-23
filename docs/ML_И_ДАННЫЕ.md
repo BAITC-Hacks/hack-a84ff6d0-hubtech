@@ -126,7 +126,10 @@ flowchart LR
 | MH#4 исключение опта | опт не раздувает регулярную потребность | PASS (исключено) |
 | MH#5 группировка + обоснование | заказ по поставщикам, каждая строка объяснена | PASS |
 
-Тестовый набор: `pytest` — **33 passed, 1 skipped**; real-data smoke (`RUN_REAL_EXCEL_TESTS=1`) — **6 passed**.
+Актуальная проверка — `python -m unittest discover -s tests -v`; отдельно
+`RUN_REAL_EXCEL_TESTS=1 python -m unittest tests.test_excel_import -v` и
+`python -m tests.validate_must_have`. Число тестов меняется при расширении
+сервиса; результаты конкретного запуска фиксируются в CI/отчёте приёмки.
 
 ---
 

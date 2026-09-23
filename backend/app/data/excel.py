@@ -15,6 +15,7 @@ from functools import lru_cache
 import math
 from pathlib import Path
 import re
+from threading import RLock
 
 import openpyxl
 import pandas as pd
@@ -402,6 +403,9 @@ class _Importer:
         )
 
 
+_IMPORT_LOCK = RLock()
+
+
 @lru_cache(maxsize=2)
 def _cached_load(root: str, fingerprints: tuple, as_of: date | None, lead_times: tuple[int, int]):
     return _Importer(Path(root), as_of, lead_times).load()
@@ -422,5 +426,9 @@ class ExcelDataSource:
         if missing:
             raise ValueError("Не найдены исходные Excel-файлы: " + ", ".join(missing))
         fingerprints = tuple((str(path), path.stat().st_mtime_ns, path.stat().st_size) for path in paths)
+        # lru_cache is coherent across threads but does not coalesce concurrent misses.
+        # A cold import must happen only once per API process, even during login bursts.
+        with _IMPORT_LOCK:
+            cached = _cached_load(str(self.root), fingerprints, self.as_of, self.lead_times)
         # Recommendation filters and detection flags must not mutate cached frames.
-        return deepcopy(_cached_load(str(self.root), fingerprints, self.as_of, self.lead_times))
+        return deepcopy(cached)

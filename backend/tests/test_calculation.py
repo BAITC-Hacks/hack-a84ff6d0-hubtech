@@ -38,6 +38,18 @@ def lines(ds, **kwargs):
 
 
 class CalculationTests(unittest.TestCase):
+    def test_missing_unit_is_explicit_without_changing_known_units(self):
+        for unit in ("", "  ", None, "м", "ед."):
+            ds = dataset()
+            ds.catalog = pd.DataFrame([dict(sku="S1", name="Товар", category="C", unit=unit)])
+            line = lines(ds)["A"]
+            if unit in ("м", "ед."):
+                self.assertEqual(line.unit, unit)
+                self.assertFalse(any("Единица измерения не указана" in warning for warning in line.warnings))
+            else:
+                self.assertEqual(line.unit, "ед. (не указана)")
+                self.assertTrue(any("Единица измерения не указана" in warning for warning in line.warnings))
+
     def test_intraday_sales_are_grouped_and_today_is_excluded(self):
         ds = dataset()
         ds.sales["date"] += pd.Timedelta(hours=14)

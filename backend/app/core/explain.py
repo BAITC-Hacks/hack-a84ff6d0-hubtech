@@ -6,8 +6,24 @@
 """
 from __future__ import annotations
 
+import time
+from contextlib import contextmanager
+from contextvars import ContextVar
+
 from app.config import get_settings
 from app.schemas import Rationale
+
+_deadline: ContextVar[float | None] = ContextVar("explanation_deadline", default=None)
+
+
+@contextmanager
+def explanation_budget(seconds: float = 120):
+    """One total budget for all explanations in a calculation."""
+    token = _deadline.set(time.monotonic() + seconds)
+    try:
+        yield
+    finally:
+        _deadline.reset(token)
 
 
 def _template(name: str, r: Rationale, qty: float, urgency: str, unit: str = "ед.") -> str:
@@ -47,11 +63,15 @@ def build_explanation(name: str, r: Rationale, qty: float, urgency: str, use_llm
     settings = get_settings()
     if not (use_llm and settings.llm_enabled):
         return base
+    deadline = _deadline.get()
+    remaining = deadline - time.monotonic() if deadline is not None else 10
+    if remaining <= 0:
+        return base
 
     try:
         from openai import OpenAI
 
-        client = OpenAI(api_key=settings.openai_api_key)
+        client = OpenAI(api_key=settings.openai_api_key, timeout=min(10, remaining), max_retries=0)
         prompt = (
             "Ты — ассистент менеджера отдела закупа. По раскладке расчёта дай краткое "
             "(1-2 предложения) деловое обоснование заказа на русском. Не выдумывай цифры, "

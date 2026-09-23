@@ -1,0 +1,23 @@
+[Unit]
+Description=Umytpa verified SQLite backup (keep 14)
+After=umytpa-api.service
+
+[Service]
+Type=oneshot
+User=umytpa
+Group=umytpa
+WorkingDirectory=/opt/umytpa/backend
+EnvironmentFile=/etc/umytpa/umytpa.env
+ExecStart=/opt/umytpa/backend/.venv/bin/python -m app.ops backup --directory /var/backups/umytpa --keep 14
+TimeoutStartSec=180
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/umytpa /var/backups/umytpa
+CapabilityBoundingSet=
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=umytpa-backup

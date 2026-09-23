@@ -1,10 +1,12 @@
-fastapi>=0.110,<0.116
-uvicorn[standard]>=0.27
-pydantic>=2.6,<3
-pandas>=2.0,<2.3
-numpy>=1.24,<2
-scipy>=1.10
-statsmodels>=0.14
-openpyxl>=3.1
-python-dotenv>=1.0
-openai>=1.30
+# Production runtime: Python 3.12. Lock transitive versions in requirements.lock.
+fastapi==0.124.4
+uvicorn==0.38.0
+pydantic==2.10.6
+pandas==2.2.3
+numpy==1.26.4
+scipy==1.16.3
+statsmodels==0.14.6
+openpyxl==3.1.5
+python-dotenv==1.2.1
+openai==2.30.0
+argon2-cffi==25.1.0
