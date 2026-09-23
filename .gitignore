@@ -12,3 +12,12 @@ frontend/dist/
 
 # OS / editor
 .DS_Store
+
+# Deployment secrets and runtime state
+/.env
+/deploy/certs/
+/backups/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+/.artifacts/

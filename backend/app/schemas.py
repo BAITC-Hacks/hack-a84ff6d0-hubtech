@@ -124,7 +124,7 @@ class RecommendRequest(BaseModel):
     category: Optional[str] = Field(default=None, description="Фильтр по категории")
     service_level: Optional[float] = Field(default=None, ge=0.5, le=0.999)
     review_period_days: Optional[int] = Field(default=None, ge=1, le=120)
-    explain: bool = Field(default=True, description="Генерировать LLM-обоснования")
+    explain: bool = Field(default=False, description="Генерировать LLM-обоснования")
 
 
 class ExportLine(BaseModel):
