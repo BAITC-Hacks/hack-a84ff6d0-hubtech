@@ -15,3 +15,9 @@ frontend/dist/
 
 # Generated ML datasets (rebuild from IEK spreadsheets)
 # /data/ml/
+
+.venv-ml/
+
+/models/iek/
+
+/models/systeme/

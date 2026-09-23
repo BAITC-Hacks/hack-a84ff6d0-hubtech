@@ -1,0 +1,626 @@
+﻿source,row,column,sku,issue,value
+sales,4,сент. 2024,030200382_,negative_quantity_preserved,-34
+sales,11,окт. 2025,030200136_,negative_quantity_preserved,-4
+sales,48,сент. 2025,010400433_,negative_quantity_preserved,-6
+sales,53,март 2026,300200784_,negative_quantity_preserved,-10
+sales,54,сент. 2025,300200785_,negative_quantity_preserved,-3
+sales,54,март 2026,300200785_,negative_quantity_preserved,-9
+sales,55,сент. 2025,300200786_,negative_quantity_preserved,-10
+sales,55,март 2026,300200786_,negative_quantity_preserved,-17
+sales,56,март 2026,300200787_,negative_quantity_preserved,-28
+sales,57,сент. 2025,300200788_,negative_quantity_preserved,-9
+sales,57,март 2026,300200788_,negative_quantity_preserved,-19
+sales,58,март 2025,300200789_,negative_quantity_preserved,-1
+sales,58,сент. 2025,300200789_,negative_quantity_preserved,-2
+sales,58,март 2026,300200789_,negative_quantity_preserved,-3
+sales,59,сент. 2025,300200790_,negative_quantity_preserved,-7
+sales,59,март 2026,300200790_,negative_quantity_preserved,-4
+sales,60,сент. 2025,300200791_,negative_quantity_preserved,-3
+sales,60,март 2026,300200791_,negative_quantity_preserved,-9
+sales,62,сент. 2025,300200793_,negative_quantity_preserved,-17
+sales,63,сент. 2025,300200794_,negative_quantity_preserved,-5
+sales,63,март 2026,300200794_,negative_quantity_preserved,-10
+sales,64,март 2026,300200795_,negative_quantity_preserved,-37
+sales,65,сент. 2025,300200796_,negative_quantity_preserved,-19
+sales,66,сент. 2025,300200797_,negative_quantity_preserved,-12
+sales,66,март 2026,300200797_,negative_quantity_preserved,-8
+sales,67,сент. 2025,300200798_,negative_quantity_preserved,-7
+sales,67,март 2026,300200798_,negative_quantity_preserved,-7
+sales,68,сент. 2025,300200799_,negative_quantity_preserved,-9
+sales,68,март 2026,300200799_,negative_quantity_preserved,-10
+sales,69,сент. 2025,300200800_,negative_quantity_preserved,-7
+sales,69,март 2026,300200800_,negative_quantity_preserved,-9
+sales,70,янв. 2025,300200801_,negative_quantity_preserved,-20
+sales,70,сент. 2025,300200801_,negative_quantity_preserved,-6
+sales,71,март 2025,300200802_,negative_quantity_preserved,-1
+sales,72,март 2025,300200803_,negative_quantity_preserved,-1
+sales,72,сент. 2025,300200803_,negative_quantity_preserved,-8
+sales,72,март 2026,300200803_,negative_quantity_preserved,-9
+sales,73,сент. 2025,300200804_,negative_quantity_preserved,-2
+sales,73,март 2026,300200804_,negative_quantity_preserved,-9
+sales,74,сент. 2025,300200805_,negative_quantity_preserved,-5
+sales,74,март 2026,300200805_,negative_quantity_preserved,-10
+sales,75,сент. 2025,300200806_,negative_quantity_preserved,-4
+sales,75,март 2026,300200806_,negative_quantity_preserved,-9
+sales,76,сент. 2025,300200807_,negative_quantity_preserved,-3
+sales,77,сент. 2025,300200808_,negative_quantity_preserved,-3
+sales,80,авг. 2025,300200811_,negative_quantity_preserved,-25
+sales,81,июль 2025,300200812_,negative_quantity_preserved,-9
+sales,82,июль 2025,300200813_,negative_quantity_preserved,-6
+sales,82,авг. 2025,300200813_,negative_quantity_preserved,-14
+sales,82,март 2026,300200813_,negative_quantity_preserved,-10
+sales,84,июль 2025,300200815_,negative_quantity_preserved,-9
+sales,84,авг. 2025,300200815_,negative_quantity_preserved,-1
+sales,84,март 2026,300200815_,negative_quantity_preserved,-9
+sales,85,март 2025,300200816_,negative_quantity_preserved,-3
+sales,85,авг. 2025,300200816_,negative_quantity_preserved,-2
+sales,85,март 2026,300200816_,negative_quantity_preserved,-3
+sales,87,июль 2025,300200818_,negative_quantity_preserved,-4
+sales,87,март 2026,300200818_,negative_quantity_preserved,-8
+sales,88,авг. 2025,300200819_,negative_quantity_preserved,-1
+sales,89,июль 2025,300200820_,negative_quantity_preserved,-12
+sales,89,март 2026,300200820_,negative_quantity_preserved,-7
+sales,92,июль 2025,300200823_,negative_quantity_preserved,-3
+sales,93,июль 2025,300200824_,negative_quantity_preserved,-33
+sales,94,март 2025,300200825_,negative_quantity_preserved,-7
+sales,94,июль 2025,300200825_,negative_quantity_preserved,-3
+sales,94,авг. 2025,300200825_,negative_quantity_preserved,-8
+sales,94,март 2026,300200825_,negative_quantity_preserved,-9
+sales,95,сент. 2025,300200826_,negative_quantity_preserved,-3
+sales,95,март 2026,300200826_,negative_quantity_preserved,-6
+sales,96,авг. 2025,300200827_,negative_quantity_preserved,-9
+sales,96,март 2026,300200827_,negative_quantity_preserved,-6
+sales,97,авг. 2025,300200828_,negative_quantity_preserved,-4
+sales,97,сент. 2025,300200828_,negative_quantity_preserved,-3
+sales,97,март 2026,300200828_,negative_quantity_preserved,-5
+sales,98,март 2025,300200829_,negative_quantity_preserved,-10
+sales,98,июль 2025,300200829_,negative_quantity_preserved,-10
+sales,98,авг. 2025,300200829_,negative_quantity_preserved,-10
+sales,98,март 2026,300200829_,negative_quantity_preserved,-9
+sales,101,июль 2025,300200832_,negative_quantity_preserved,-11
+sales,101,авг. 2025,300200832_,negative_quantity_preserved,-3
+sales,102,июль 2025,300200833_,negative_quantity_preserved,-2
+sales,102,авг. 2025,300200833_,negative_quantity_preserved,-8
+sales,102,сент. 2025,300200833_,negative_quantity_preserved,-6
+sales,103,июль 2025,300200834_,negative_quantity_preserved,-7
+sales,103,сент. 2025,300200834_,negative_quantity_preserved,-4
+sales,103,март 2026,300200834_,negative_quantity_preserved,-15
+sales,104,март 2025,300200835_,negative_quantity_preserved,-1
+sales,104,июль 2025,300200835_,negative_quantity_preserved,-5
+sales,105,июль 2025,300200836_,negative_quantity_preserved,-10
+sales,105,авг. 2025,300200836_,negative_quantity_preserved,-4
+sales,105,сент. 2025,300200836_,negative_quantity_preserved,-5
+sales,105,март 2026,300200836_,negative_quantity_preserved,-9
+sales,107,март 2025,300200838_,negative_quantity_preserved,-7
+sales,108,март 2025,300200839_,negative_quantity_preserved,-4
+sales,108,июль 2025,300200839_,negative_quantity_preserved,-1
+sales,108,март 2026,300200839_,negative_quantity_preserved,-7
+sales,109,март 2025,300200840_,negative_quantity_preserved,-7
+sales,109,июль 2025,300200840_,negative_quantity_preserved,-9
+sales,109,авг. 2025,300200840_,negative_quantity_preserved,-5
+sales,109,сент. 2025,300200840_,negative_quantity_preserved,-5
+sales,109,март 2026,300200840_,negative_quantity_preserved,-7
+sales,110,авг. 2025,300200841_,negative_quantity_preserved,-2
+sales,111,июль 2025,300200842_,negative_quantity_preserved,-23
+sales,112,авг. 2025,300200843_,negative_quantity_preserved,-21
+sales,112,сент. 2025,300200843_,negative_quantity_preserved,-10
+sales,113,авг. 2025,300200844_,negative_quantity_preserved,-3
+sales,114,март 2025,300200845_,negative_quantity_preserved,-10
+sales,114,июль 2025,300200845_,negative_quantity_preserved,-23
+sales,114,авг. 2025,300200845_,negative_quantity_preserved,-2
+sales,114,сент. 2025,300200845_,negative_quantity_preserved,-5
+sales,114,март 2026,300200845_,negative_quantity_preserved,-3
+sales,115,июль 2025,300200846_,negative_quantity_preserved,-234
+sales,115,сент. 2025,300200846_,negative_quantity_preserved,-22
+sales,115,март 2026,300200846_,negative_quantity_preserved,-9
+sales,116,март 2025,300200847_,negative_quantity_preserved,-21
+sales,116,сент. 2025,300200847_,negative_quantity_preserved,-8
+sales,117,март 2025,300200848_,negative_quantity_preserved,-7
+sales,117,сент. 2025,300200848_,negative_quantity_preserved,-10
+sales,118,март 2025,300200849_,negative_quantity_preserved,-2
+sales,118,июль 2025,300200849_,negative_quantity_preserved,-6
+sales,119,март 2025,300200850_,negative_quantity_preserved,-9
+sales,119,июль 2025,300200850_,negative_quantity_preserved,-3
+sales,119,авг. 2025,300200850_,negative_quantity_preserved,-9
+sales,119,сент. 2025,300200850_,negative_quantity_preserved,-10
+sales,119,март 2026,300200850_,negative_quantity_preserved,-7
+sales,120,март 2026,300200851_,negative_quantity_preserved,-1
+sales,121,июнь 2025,300200852_,negative_quantity_preserved,-5
+sales,121,авг. 2025,300200852_,negative_quantity_preserved,-10
+sales,121,сент. 2025,300200852_,negative_quantity_preserved,-5
+sales,121,март 2026,300200852_,negative_quantity_preserved,-5
+sales,122,авг. 2025,300200853_,negative_quantity_preserved,-3
+sales,122,сент. 2025,300200853_,negative_quantity_preserved,-1
+sales,122,март 2026,300200853_,negative_quantity_preserved,-6
+sales,123,март 2025,300200854_,negative_quantity_preserved,-10
+sales,123,июль 2025,300200854_,negative_quantity_preserved,-10
+sales,123,авг. 2025,300200854_,negative_quantity_preserved,-5
+sales,123,сент. 2025,300200854_,negative_quantity_preserved,-5
+sales,123,март 2026,300200854_,negative_quantity_preserved,-1
+sales,125,март 2026,300200856_,negative_quantity_preserved,-51
+sales,125,авг. 2026,300200856_,negative_quantity_preserved,-7
+sales,126,март 2026,300200857_,negative_quantity_preserved,-39
+sales,127,сент. 2025,300200858_,negative_quantity_preserved,-8
+sales,127,окт. 2025,300200858_,negative_quantity_preserved,-8
+sales,127,март 2026,300200858_,negative_quantity_preserved,-12
+sales,128,авг. 2025,300200859_,negative_quantity_preserved,-11
+sales,128,март 2026,300200859_,negative_quantity_preserved,-12
+sales,129,авг. 2025,300200860_,negative_quantity_preserved,-5
+sales,129,окт. 2025,300200860_,negative_quantity_preserved,-8
+sales,129,март 2026,300200860_,negative_quantity_preserved,-16
+sales,130,март 2026,300200861_,negative_quantity_preserved,-12
+sales,131,авг. 2025,300200862_,negative_quantity_preserved,-7
+sales,131,окт. 2025,300200862_,negative_quantity_preserved,-9
+sales,131,март 2026,300200862_,negative_quantity_preserved,-7
+sales,132,март 2025,300200863_,negative_quantity_preserved,-3
+sales,132,авг. 2025,300200863_,negative_quantity_preserved,-5
+sales,132,окт. 2025,300200863_,negative_quantity_preserved,-3
+sales,132,март 2026,300200863_,negative_quantity_preserved,-13
+sales,133,авг. 2025,300200864_,negative_quantity_preserved,-3
+sales,133,сент. 2025,300200864_,negative_quantity_preserved,-3
+sales,134,авг. 2025,300200865_,negative_quantity_preserved,-56
+sales,135,авг. 2025,300200866_,negative_quantity_preserved,-8
+sales,135,окт. 2025,300200866_,negative_quantity_preserved,-4
+sales,135,март 2026,300200866_,negative_quantity_preserved,-7
+sales,136,сент. 2025,300200867_,negative_quantity_preserved,-6
+sales,136,окт. 2025,300200867_,negative_quantity_preserved,-3
+sales,136,март 2026,300200867_,negative_quantity_preserved,-8
+sales,137,март 2026,300200868_,negative_quantity_preserved,-61
+sales,138,март 2026,300200869_,negative_quantity_preserved,-25
+sales,139,март 2026,300200870_,negative_quantity_preserved,-15
+sales,140,авг. 2025,300200871_,negative_quantity_preserved,-3
+sales,140,март 2026,300200871_,negative_quantity_preserved,-8
+sales,141,март 2025,300200872_,negative_quantity_preserved,-8
+sales,141,авг. 2025,300200872_,negative_quantity_preserved,-5
+sales,141,сент. 2025,300200872_,negative_quantity_preserved,-10
+sales,141,окт. 2025,300200872_,negative_quantity_preserved,-3
+sales,141,март 2026,300200872_,negative_quantity_preserved,-10
+sales,142,март 2026,300200873_,negative_quantity_preserved,-8
+sales,148,сент. 2025,300200879_,negative_quantity_preserved,-5
+sales,149,март 2025,300200880_,negative_quantity_preserved,-5
+sales,149,сент. 2025,300200880_,negative_quantity_preserved,-2
+sales,149,окт. 2025,300200880_,negative_quantity_preserved,-5
+sales,149,март 2026,300200880_,negative_quantity_preserved,-10
+sales,151,сент. 2025,300200882_,negative_quantity_preserved,-10
+sales,152,сент. 2025,300200883_,negative_quantity_preserved,-10
+sales,153,сент. 2025,300200884_,negative_quantity_preserved,-10
+sales,154,сент. 2025,300200885_,negative_quantity_preserved,-10
+sales,155,сент. 2025,300200886_,negative_quantity_preserved,-10
+sales,166,март 2025,300200898_,negative_quantity_preserved,-15
+sales,167,март 2025,300200899_,negative_quantity_preserved,-1
+sales,168,март 2025,300200900_,negative_quantity_preserved,-1
+sales,170,март 2025,300200902_,negative_quantity_preserved,-1
+sales,180,сент. 2025,300200912_,negative_quantity_preserved,-17
+sales,180,март 2026,300200912_,negative_quantity_preserved,-10
+sales,181,сент. 2025,300200913_,negative_quantity_preserved,-10
+sales,181,март 2026,300200913_,negative_quantity_preserved,-17
+sales,182,март 2026,300200914_,negative_quantity_preserved,-4
+sales,183,сент. 2025,300200915_,negative_quantity_preserved,-10
+sales,183,март 2026,300200915_,negative_quantity_preserved,-18
+sales,184,сент. 2025,300200916_,negative_quantity_preserved,-5
+sales,184,март 2026,300200916_,negative_quantity_preserved,-3
+sales,185,сент. 2025,300200917_,negative_quantity_preserved,-10
+sales,185,март 2026,300200917_,negative_quantity_preserved,-8
+sales,186,сент. 2025,300200918_,negative_quantity_preserved,-5
+sales,187,сент. 2025,300200919_,negative_quantity_preserved,-3
+sales,188,сент. 2025,300200920_,negative_quantity_preserved,-5
+sales,188,март 2026,300200920_,negative_quantity_preserved,-5
+sales,189,март 2026,300200921_,negative_quantity_preserved,-28
+sales,190,сент. 2025,300200922_,negative_quantity_preserved,-15
+sales,190,март 2026,300200922_,negative_quantity_preserved,-10
+sales,191,сент. 2025,300200923_,negative_quantity_preserved,-18
+sales,192,март 2026,300200924_,negative_quantity_preserved,-2
+sales,193,сент. 2025,300200925_,negative_quantity_preserved,-10
+sales,193,март 2026,300200925_,negative_quantity_preserved,-8
+sales,194,сент. 2025,300200926_,negative_quantity_preserved,-10
+sales,194,март 2026,300200926_,negative_quantity_preserved,-9
+sales,195,сент. 2025,300200927_,negative_quantity_preserved,-5
+sales,195,март 2026,300200927_,negative_quantity_preserved,-8
+sales,196,март 2026,300200928_,negative_quantity_preserved,-4
+sales,197,сент. 2025,300200929_,negative_quantity_preserved,-5
+sales,197,март 2026,300200929_,negative_quantity_preserved,-9
+sales,200,сент. 2025,300200932_,negative_quantity_preserved,-10
+sales,200,март 2026,300200932_,negative_quantity_preserved,-5
+sales,224,дек. 2024,300200371_,negative_quantity_preserved,-5
+sales,225,апр. 2024,300200420_,negative_quantity_preserved,-21
+sales,225,дек. 2024,300200420_,negative_quantity_preserved,-13
+sales,226,апр. 2024,300200375_,negative_quantity_preserved,-18
+sales,227,апр. 2024,300200422_,negative_quantity_preserved,-13
+sales,227,дек. 2024,300200422_,negative_quantity_preserved,-6
+sales,228,апр. 2024,300200363_,negative_quantity_preserved,-4
+sales,228,дек. 2024,300200363_,negative_quantity_preserved,-2
+sales,229,дек. 2024,300200368_,negative_quantity_preserved,-20
+sales,232,дек. 2024,300200424_,negative_quantity_preserved,-18
+sales,233,апр. 2024,300200372_,negative_quantity_preserved,-27
+sales,233,дек. 2024,300200372_,negative_quantity_preserved,-2
+sales,234,апр. 2024,300200373_,negative_quantity_preserved,-80
+sales,234,апр. 2025,300200373_,negative_quantity_preserved,-2
+sales,234,авг. 2026,300200373_,negative_quantity_preserved,-1
+sales,235,дек. 2024,300200418_,negative_quantity_preserved,-20
+sales,239,дек. 2024,300200370_,negative_quantity_preserved,-7
+sales,246,дек. 2024,300200380_,negative_quantity_preserved,-16
+sales,247,дек. 2024,300200421_,negative_quantity_preserved,-4
+sales,248,март 2024,щщщ0116254,negative_quantity_preserved,-3
+sales,254,авг. 2025,300200525_,negative_quantity_preserved,-1
+sales,272,нояб. 2025,300200704_,negative_quantity_preserved,-15
+sales,274,сент. 2025,300200544_,negative_quantity_preserved,-4
+sales,293,май 2025,300200561_,negative_quantity_preserved,-5
+sales,297,сент. 2024,300200565_,negative_quantity_preserved,-11
+sales,298,окт. 2025,300200590_,negative_quantity_preserved,-3
+sales,299,сент. 2024,300200566_,negative_quantity_preserved,-4
+sales,299,дек. 2024,300200566_,negative_quantity_preserved,-20
+sales,301,сент. 2024,300200591_,negative_quantity_preserved,-3
+sales,302,сент. 2024,300200568_,negative_quantity_preserved,-17
+sales,302,дек. 2024,300200568_,negative_quantity_preserved,-10
+sales,303,дек. 2024,300200569_,negative_quantity_preserved,-9
+sales,304,дек. 2024,300200570_,negative_quantity_preserved,-12
+sales,305,дек. 2024,300200571_,negative_quantity_preserved,-11
+sales,307,дек. 2024,300200573_,negative_quantity_preserved,-24
+sales,308,сент. 2024,300200574_,negative_quantity_preserved,-28
+sales,308,дек. 2024,300200574_,negative_quantity_preserved,-8
+sales,310,дек. 2024,300200511_,negative_quantity_preserved,-18
+sales,311,сент. 2024,300200576_,negative_quantity_preserved,-14
+sales,312,окт. 2024,300200776_,negative_quantity_preserved,-2
+sales,313,дек. 2024,300200577_,negative_quantity_preserved,-17
+sales,315,апр. 2026,300200580_,negative_quantity_preserved,-17
+sales,317,дек. 2024,300200582_,negative_quantity_preserved,-11
+sales,318,дек. 2024,300200583_,negative_quantity_preserved,-15
+sales,319,сент. 2024,300200584_,negative_quantity_preserved,-4
+sales,319,дек. 2024,300200584_,negative_quantity_preserved,-24
+sales,324,окт. 2024,020100159_,negative_quantity_preserved,-2
+sales,324,май 2026,020100159_,negative_quantity_preserved,-30
+sales,327,окт. 2024,020100161_,negative_quantity_preserved,-7
+sales,327,дек. 2024,020100161_,negative_quantity_preserved,-7
+sales,332,февр. 2026,020100162_,negative_quantity_preserved,-6
+sales,336,дек. 2024,300200518_,negative_quantity_preserved,-13
+sales,346,нояб. 2024,300200775_,negative_quantity_preserved,-1
+sales,350,апр. 2025,300200783_,negative_quantity_preserved,-2
+sales,359,июнь 2025,030200015_,negative_quantity_preserved,-2
+sales,359,нояб. 2025,030200015_,negative_quantity_preserved,-4
+sales,372,июнь 2024,030200034_,negative_quantity_preserved,-217
+sales,389,окт. 2024,030200244_,negative_quantity_preserved,-3
+sales,392,окт. 2024,030200249_,negative_quantity_preserved,-2
+sales,398,дек. 2025,030200263_,negative_quantity_preserved,-1
+sales,410,май 2026,300200283_,negative_quantity_preserved,-12
+sales,415,нояб. 2024,300200767_,negative_quantity_preserved,-2
+sales,415,июль 2025,300200767_,negative_quantity_preserved,-1
+sales,418,авг. 2025,300200290_,negative_quantity_preserved,-20
+sales,422,сент. 2025,300200299_,negative_quantity_preserved,-52
+sales,430,янв. 2024,300200292_,negative_quantity_preserved,-8
+sales,437,май 2026,300200307_,negative_quantity_preserved,-7
+sales,470,дек. 2024,300200430_,negative_quantity_preserved,-23
+sales,471,авг. 2026,300200588_,negative_quantity_preserved,-68
+sales,472,дек. 2024,300200443_,negative_quantity_preserved,-25
+sales,472,авг. 2026,300200443_,negative_quantity_preserved,-10
+sales,473,дек. 2024,300200432_,negative_quantity_preserved,-12
+sales,474,дек. 2024,300200444_,negative_quantity_preserved,-15
+sales,474,авг. 2026,300200444_,negative_quantity_preserved,-8
+sales,475,дек. 2024,300200449_,negative_quantity_preserved,-5
+sales,475,июнь 2025,300200449_,negative_quantity_preserved,-1
+sales,475,авг. 2026,300200449_,negative_quantity_preserved,-8
+sales,477,июнь 2025,300200433_,negative_quantity_preserved,-1
+sales,477,авг. 2025,300200433_,negative_quantity_preserved,-11
+sales,478,дек. 2024,300200439_,negative_quantity_preserved,-12
+sales,479,дек. 2024,300200451_,negative_quantity_preserved,-5
+sales,480,дек. 2024,300200448_,negative_quantity_preserved,-11
+sales,480,авг. 2026,300200448_,negative_quantity_preserved,-7
+sales,484,дек. 2024,300200452_,negative_quantity_preserved,-2
+sales,484,июль 2026,300200452_,negative_quantity_preserved,-2
+sales,485,авг. 2026,300200434_,negative_quantity_preserved,-14
+sales,487,июль 2025,300200632_,negative_quantity_preserved,-25
+sales,488,дек. 2024,300200441_,negative_quantity_preserved,-2
+sales,488,июнь 2025,300200441_,negative_quantity_preserved,-3
+sales,489,дек. 2024,300200450_,negative_quantity_preserved,-11
+sales,493,дек. 2024,300200440_,negative_quantity_preserved,-9
+sales,493,авг. 2026,300200440_,negative_quantity_preserved,-2
+sales,494,дек. 2024,300200445_,negative_quantity_preserved,-14
+sales,494,апр. 2025,300200445_,negative_quantity_preserved,-30
+sales,494,авг. 2026,300200445_,negative_quantity_preserved,-7
+sales,495,дек. 2024,300200446_,negative_quantity_preserved,-7
+sales,503,нояб. 2025,300200719_,negative_quantity_preserved,-50
+sales,519,янв. 2024,300200733_,negative_quantity_preserved,-1
+sales,528,авг. 2025,300200740_,negative_quantity_preserved,-15
+sales,555,июль 2024,130300028_,negative_quantity_preserved,-1310
+sales,555,янв. 2026,130300028_,negative_quantity_preserved,-253
+transactions,2,Количество,300200445_,negative_quantity_preserved,-10
+transactions,3,Количество,300200299_,negative_quantity_preserved,-2
+transactions,4,Количество,300200290_,negative_quantity_preserved,-10
+transactions,5,Количество,300200448_,negative_quantity_preserved,-2
+transactions,6,Количество,020100162_,negative_quantity_preserved,-5
+transactions,7,Количество,300200445_,negative_quantity_preserved,-30
+transactions,8,Количество,300200307_,negative_quantity_preserved,-20
+transactions,9,Количество,300200283_,negative_quantity_preserved,-10
+transactions,10,Количество,300200446_,negative_quantity_preserved,-5
+transactions,11,Количество,300200784_,negative_quantity_preserved,-20
+transactions,12,Количество,300200785_,negative_quantity_preserved,-20
+transactions,13,Количество,300200786_,negative_quantity_preserved,-10
+transactions,14,Количество,300200788_,negative_quantity_preserved,-9
+transactions,15,Количество,300200789_,negative_quantity_preserved,-6
+transactions,16,Количество,300200790_,negative_quantity_preserved,-9
+transactions,17,Количество,300200791_,negative_quantity_preserved,-4
+transactions,18,Количество,300200793_,negative_quantity_preserved,-17
+transactions,19,Количество,300200794_,negative_quantity_preserved,-5
+transactions,20,Количество,300200795_,negative_quantity_preserved,-15
+transactions,21,Количество,300200796_,negative_quantity_preserved,-30
+transactions,22,Количество,300200797_,negative_quantity_preserved,-20
+transactions,23,Количество,300200798_,negative_quantity_preserved,-10
+transactions,24,Количество,300200799_,negative_quantity_preserved,-10
+transactions,25,Количество,300200800_,negative_quantity_preserved,-9
+transactions,26,Количество,300200801_,negative_quantity_preserved,-6
+transactions,27,Количество,300200803_,negative_quantity_preserved,-10
+transactions,28,Количество,300200804_,negative_quantity_preserved,-2
+transactions,29,Количество,300200805_,negative_quantity_preserved,-5
+transactions,30,Количество,300200806_,negative_quantity_preserved,-4
+transactions,31,Количество,300200807_,negative_quantity_preserved,-3
+transactions,32,Количество,300200808_,negative_quantity_preserved,-3
+transactions,33,Количество,300200833_,negative_quantity_preserved,-10
+transactions,34,Количество,300200836_,negative_quantity_preserved,-5
+transactions,35,Количество,300200840_,negative_quantity_preserved,-5
+transactions,36,Количество,300200842_,negative_quantity_preserved,-5
+transactions,37,Количество,300200843_,negative_quantity_preserved,-10
+transactions,38,Количество,300200845_,negative_quantity_preserved,-5
+transactions,39,Количество,300200847_,negative_quantity_preserved,-9
+transactions,40,Количество,300200848_,negative_quantity_preserved,-20
+transactions,41,Количество,300200850_,negative_quantity_preserved,-10
+transactions,42,Количество,300200852_,negative_quantity_preserved,-5
+transactions,43,Количество,300200853_,negative_quantity_preserved,-4
+transactions,44,Количество,300200854_,negative_quantity_preserved,-5
+transactions,45,Количество,300200856_,negative_quantity_preserved,-10
+transactions,46,Количество,300200857_,negative_quantity_preserved,-7
+transactions,47,Количество,300200858_,negative_quantity_preserved,-10
+transactions,48,Количество,300200859_,negative_quantity_preserved,-10
+transactions,49,Количество,300200860_,negative_quantity_preserved,-5
+transactions,50,Количество,300200862_,negative_quantity_preserved,-5
+transactions,51,Количество,300200864_,negative_quantity_preserved,-3
+transactions,52,Количество,300200865_,negative_quantity_preserved,-6
+transactions,53,Количество,300200868_,negative_quantity_preserved,-28
+transactions,54,Количество,300200869_,negative_quantity_preserved,-29
+transactions,55,Количество,300200870_,negative_quantity_preserved,-20
+transactions,56,Количество,300200871_,negative_quantity_preserved,-10
+transactions,57,Количество,300200872_,negative_quantity_preserved,-10
+transactions,58,Количество,300200873_,negative_quantity_preserved,-5
+transactions,59,Количество,300200879_,negative_quantity_preserved,-5
+transactions,60,Количество,300200882_,negative_quantity_preserved,-10
+transactions,61,Количество,300200883_,negative_quantity_preserved,-10
+transactions,62,Количество,300200884_,negative_quantity_preserved,-10
+transactions,63,Количество,300200885_,negative_quantity_preserved,-10
+transactions,64,Количество,300200886_,negative_quantity_preserved,-10
+transactions,65,Количество,300200910_,negative_quantity_preserved,-20
+transactions,66,Количество,300200912_,negative_quantity_preserved,-20
+transactions,67,Количество,300200913_,negative_quantity_preserved,-10
+transactions,68,Количество,300200914_,negative_quantity_preserved,-20
+transactions,69,Количество,300200915_,negative_quantity_preserved,-10
+transactions,70,Количество,300200916_,negative_quantity_preserved,-5
+transactions,71,Количество,300200917_,negative_quantity_preserved,-10
+transactions,72,Количество,300200918_,negative_quantity_preserved,-5
+transactions,73,Количество,300200919_,negative_quantity_preserved,-3
+transactions,74,Количество,300200920_,negative_quantity_preserved,-5
+transactions,75,Количество,300200921_,negative_quantity_preserved,-20
+transactions,76,Количество,300200922_,negative_quantity_preserved,-30
+transactions,77,Количество,300200923_,negative_quantity_preserved,-20
+transactions,78,Количество,300200924_,negative_quantity_preserved,-10
+transactions,79,Количество,300200925_,negative_quantity_preserved,-10
+transactions,80,Количество,300200926_,negative_quantity_preserved,-10
+transactions,81,Количество,300200927_,negative_quantity_preserved,-5
+transactions,82,Количество,300200929_,negative_quantity_preserved,-5
+transactions,83,Количество,300200932_,negative_quantity_preserved,-10
+transactions,84,Количество,300200785_,negative_quantity_preserved,-11
+transactions,85,Количество,300200786_,negative_quantity_preserved,-17
+transactions,86,Количество,300200787_,negative_quantity_preserved,-9
+transactions,87,Количество,300200788_,negative_quantity_preserved,-19
+transactions,88,Количество,300200789_,negative_quantity_preserved,-9
+transactions,89,Количество,300200790_,negative_quantity_preserved,-8
+transactions,90,Количество,300200791_,negative_quantity_preserved,-10
+transactions,91,Количество,300200794_,negative_quantity_preserved,-10
+transactions,92,Количество,300200795_,negative_quantity_preserved,-43
+transactions,93,Количество,300200796_,negative_quantity_preserved,-13
+transactions,94,Количество,300200797_,negative_quantity_preserved,-13
+transactions,95,Количество,300200798_,negative_quantity_preserved,-7
+transactions,96,Количество,300200799_,negative_quantity_preserved,-10
+transactions,97,Количество,300200800_,negative_quantity_preserved,-9
+transactions,98,Количество,300200803_,negative_quantity_preserved,-9
+transactions,99,Количество,300200804_,negative_quantity_preserved,-9
+transactions,100,Количество,300200805_,negative_quantity_preserved,-10
+transactions,101,Количество,300200806_,negative_quantity_preserved,-9
+transactions,102,Количество,300200810_,negative_quantity_preserved,-80
+transactions,103,Количество,300200812_,negative_quantity_preserved,-30
+transactions,104,Количество,300200814_,negative_quantity_preserved,-18
+transactions,105,Количество,300200816_,negative_quantity_preserved,-7
+transactions,106,Количество,300200817_,negative_quantity_preserved,-20
+transactions,107,Количество,300200818_,negative_quantity_preserved,-9
+transactions,108,Количество,300200820_,negative_quantity_preserved,-12
+transactions,109,Количество,300200821_,negative_quantity_preserved,-73
+transactions,110,Количество,300200822_,negative_quantity_preserved,-30
+transactions,111,Количество,300200823_,negative_quantity_preserved,-20
+transactions,112,Количество,300200824_,negative_quantity_preserved,-40
+transactions,113,Количество,300200825_,negative_quantity_preserved,-4
+transactions,114,Количество,300200826_,negative_quantity_preserved,-4
+transactions,115,Количество,300200829_,negative_quantity_preserved,-10
+transactions,116,Количество,300200833_,negative_quantity_preserved,-45
+transactions,117,Количество,300200840_,negative_quantity_preserved,-10
+transactions,118,Количество,300200842_,negative_quantity_preserved,-100
+transactions,119,Количество,300200845_,negative_quantity_preserved,-25
+transactions,120,Количество,300200847_,negative_quantity_preserved,-42
+transactions,121,Количество,300200848_,negative_quantity_preserved,-26
+transactions,122,Количество,300200849_,negative_quantity_preserved,-16
+transactions,123,Количество,300200850_,negative_quantity_preserved,-4
+transactions,124,Количество,300200854_,negative_quantity_preserved,-10
+transactions,125,Количество,300200856_,negative_quantity_preserved,-28
+transactions,126,Количество,300200857_,negative_quantity_preserved,-10
+transactions,127,Количество,300200859_,negative_quantity_preserved,-5
+transactions,128,Количество,300200862_,negative_quantity_preserved,-28
+transactions,129,Количество,300200869_,negative_quantity_preserved,-36
+transactions,130,Количество,300200871_,negative_quantity_preserved,-14
+transactions,131,Количество,300200872_,negative_quantity_preserved,-5
+transactions,132,Количество,300200873_,negative_quantity_preserved,-10
+transactions,133,Количество,300200810_,negative_quantity_preserved,-13
+transactions,134,Количество,300200812_,negative_quantity_preserved,-13
+transactions,135,Количество,300200814_,negative_quantity_preserved,-20
+transactions,136,Количество,300200816_,negative_quantity_preserved,-10
+transactions,137,Количество,300200817_,negative_quantity_preserved,-4
+transactions,138,Количество,300200818_,negative_quantity_preserved,-7
+transactions,139,Количество,300200821_,negative_quantity_preserved,-43
+transactions,140,Количество,300200822_,negative_quantity_preserved,-46
+transactions,141,Количество,300200823_,negative_quantity_preserved,-19
+transactions,142,Количество,300200825_,negative_quantity_preserved,-10
+transactions,143,Количество,300200826_,negative_quantity_preserved,-9
+transactions,144,Количество,300200829_,negative_quantity_preserved,-10
+transactions,145,Количество,300200833_,negative_quantity_preserved,-25
+transactions,146,Количество,300200840_,negative_quantity_preserved,-10
+transactions,147,Количество,300200842_,negative_quantity_preserved,-35
+transactions,148,Количество,300200845_,negative_quantity_preserved,-10
+transactions,149,Количество,300200847_,negative_quantity_preserved,-46
+transactions,150,Количество,300200848_,negative_quantity_preserved,-19
+transactions,151,Количество,300200849_,negative_quantity_preserved,-10
+transactions,152,Количество,300200850_,negative_quantity_preserved,-10
+transactions,153,Количество,300200854_,negative_quantity_preserved,-10
+transactions,154,Количество,300200857_,negative_quantity_preserved,-20
+transactions,155,Количество,300200859_,negative_quantity_preserved,-15
+transactions,156,Количество,300200862_,negative_quantity_preserved,-6
+transactions,157,Количество,300200868_,negative_quantity_preserved,-40
+transactions,158,Количество,300200869_,negative_quantity_preserved,-24
+transactions,159,Количество,300200870_,negative_quantity_preserved,-6
+transactions,160,Количество,300200871_,negative_quantity_preserved,-5
+transactions,161,Количество,300200872_,negative_quantity_preserved,-10
+transactions,162,Количество,300200873_,negative_quantity_preserved,-4
+transactions,163,Количество,300200811_,negative_quantity_preserved,-25
+transactions,164,Количество,300200812_,negative_quantity_preserved,-17
+transactions,165,Количество,300200813_,negative_quantity_preserved,-4
+transactions,166,Количество,300200814_,negative_quantity_preserved,-1
+transactions,167,Количество,300200815_,negative_quantity_preserved,-1
+transactions,168,Количество,300200816_,negative_quantity_preserved,-7
+transactions,169,Количество,300200817_,negative_quantity_preserved,-1
+transactions,170,Количество,300200819_,negative_quantity_preserved,-3
+transactions,171,Количество,300200823_,negative_quantity_preserved,-2
+transactions,172,Количество,300200825_,negative_quantity_preserved,-8
+transactions,173,Количество,300200826_,negative_quantity_preserved,-7
+transactions,174,Количество,300200827_,negative_quantity_preserved,-9
+transactions,175,Количество,300200828_,negative_quantity_preserved,-7
+transactions,176,Количество,300200829_,negative_quantity_preserved,-10
+transactions,177,Количество,300200833_,negative_quantity_preserved,-28
+transactions,178,Количество,300200840_,negative_quantity_preserved,-5
+transactions,179,Количество,300200841_,negative_quantity_preserved,-2
+transactions,180,Количество,300200843_,negative_quantity_preserved,-1
+transactions,181,Количество,300200845_,negative_quantity_preserved,-2
+transactions,182,Количество,300200849_,negative_quantity_preserved,-3
+transactions,183,Количество,300200850_,negative_quantity_preserved,-9
+transactions,184,Количество,300200852_,negative_quantity_preserved,-10
+transactions,185,Количество,300200853_,negative_quantity_preserved,-3
+transactions,186,Количество,300200857_,negative_quantity_preserved,-4
+transactions,187,Количество,300200859_,negative_quantity_preserved,-30
+transactions,188,Количество,300200862_,negative_quantity_preserved,-7
+transactions,189,Количество,300200863_,negative_quantity_preserved,-8
+transactions,190,Количество,300200864_,negative_quantity_preserved,-3
+transactions,191,Количество,300200865_,negative_quantity_preserved,-56
+transactions,192,Количество,300200866_,negative_quantity_preserved,-10
+transactions,193,Количество,300200871_,negative_quantity_preserved,-6
+transactions,194,Количество,300200872_,negative_quantity_preserved,-9
+transactions,195,Количество,300200873_,negative_quantity_preserved,-1
+transactions,196,Количество,300200875_,negative_quantity_preserved,-7
+transactions,197,Количество,300200879_,negative_quantity_preserved,-5
+transactions,198,Количество,300200856_,negative_quantity_preserved,-56
+transactions,199,Количество,300200857_,negative_quantity_preserved,-10
+transactions,200,Количество,300200834_,negative_quantity_preserved,-7
+transactions,201,Количество,300200835_,negative_quantity_preserved,-32
+transactions,202,Количество,300200836_,negative_quantity_preserved,-10
+transactions,203,Количество,300200839_,negative_quantity_preserved,-10
+transactions,204,Количество,300200844_,negative_quantity_preserved,-8
+transactions,205,Количество,300200860_,negative_quantity_preserved,-3
+transactions,206,Количество,300200863_,negative_quantity_preserved,-8
+transactions,207,Количество,300200866_,negative_quantity_preserved,-2
+transactions,208,Количество,300200867_,negative_quantity_preserved,-20
+transactions,209,Количество,300200880_,negative_quantity_preserved,-5
+transactions,210,Количество,300200835_,negative_quantity_preserved,-17
+transactions,211,Количество,300200838_,negative_quantity_preserved,-10
+transactions,212,Количество,300200839_,negative_quantity_preserved,-10
+transactions,213,Количество,300200846_,negative_quantity_preserved,-37
+transactions,214,Количество,300200863_,negative_quantity_preserved,-5
+transactions,215,Количество,300200880_,negative_quantity_preserved,-5
+transactions,216,Количество,300200813_,negative_quantity_preserved,-7
+transactions,217,Количество,300200815_,negative_quantity_preserved,-9
+transactions,218,Количество,300200832_,negative_quantity_preserved,-10
+transactions,219,Количество,300200846_,negative_quantity_preserved,-28
+transactions,220,Количество,300200813_,negative_quantity_preserved,-10
+transactions,221,Количество,300200817_,negative_quantity_preserved,-5
+transactions,222,Количество,300200846_,negative_quantity_preserved,-55
+transactions,223,Количество,300200815_,negative_quantity_preserved,-4
+transactions,224,Количество,300200816_,negative_quantity_preserved,-7
+transactions,225,Количество,300200818_,negative_quantity_preserved,-3
+transactions,226,Количество,300200820_,negative_quantity_preserved,-7
+transactions,227,Количество,300200825_,negative_quantity_preserved,-9
+transactions,228,Количество,300200826_,negative_quantity_preserved,-6
+transactions,229,Количество,300200828_,negative_quantity_preserved,-7
+transactions,230,Количество,300200829_,negative_quantity_preserved,-9
+transactions,231,Количество,300200857_,negative_quantity_preserved,-32
+transactions,232,Количество,300200868_,negative_quantity_preserved,-58
+transactions,233,Количество,300200870_,negative_quantity_preserved,-7
+transactions,234,Количество,300200872_,negative_quantity_preserved,-10
+transactions,235,Количество,300200912_,negative_quantity_preserved,-13
+transactions,236,Количество,300200913_,negative_quantity_preserved,-17
+transactions,237,Количество,300200914_,negative_quantity_preserved,-10
+transactions,238,Количество,300200915_,negative_quantity_preserved,-18
+transactions,239,Количество,300200916_,negative_quantity_preserved,-5
+transactions,240,Количество,300200917_,negative_quantity_preserved,-8
+transactions,241,Количество,300200920_,negative_quantity_preserved,-2
+transactions,242,Количество,300200922_,negative_quantity_preserved,-21
+transactions,243,Количество,300200923_,negative_quantity_preserved,-11
+transactions,244,Количество,300200924_,negative_quantity_preserved,-6
+transactions,245,Количество,300200925_,negative_quantity_preserved,-9
+transactions,246,Количество,300200926_,negative_quantity_preserved,-10
+transactions,247,Количество,300200927_,negative_quantity_preserved,-10
+transactions,248,Количество,300200929_,negative_quantity_preserved,-9
+transactions,249,Количество,300200842_,negative_quantity_preserved,-49
+transactions,250,Количество,300200846_,negative_quantity_preserved,-260
+transactions,251,Количество,300200832_,negative_quantity_preserved,-4
+transactions,252,Количество,300200833_,negative_quantity_preserved,-17
+transactions,253,Количество,300200834_,negative_quantity_preserved,-15
+transactions,254,Количество,300200836_,negative_quantity_preserved,-9
+transactions,255,Количество,300200839_,negative_quantity_preserved,-4
+transactions,256,Количество,300200846_,negative_quantity_preserved,-46
+transactions,257,Количество,300200849_,negative_quantity_preserved,-3
+transactions,258,Количество,300200850_,negative_quantity_preserved,-8
+transactions,259,Количество,300200840_,negative_quantity_preserved,-7
+transactions,260,Количество,300200844_,negative_quantity_preserved,-4
+transactions,261,Количество,300200845_,negative_quantity_preserved,-3
+transactions,262,Количество,300200853_,negative_quantity_preserved,-6
+transactions,263,Количество,300200858_,negative_quantity_preserved,-2
+transactions,264,Количество,300200859_,negative_quantity_preserved,-5
+transactions,265,Количество,300200860_,negative_quantity_preserved,-16
+transactions,266,Количество,300200863_,negative_quantity_preserved,-8
+transactions,267,Количество,300200866_,negative_quantity_preserved,-2
+transactions,268,Количество,300200867_,negative_quantity_preserved,-3
+transactions,269,Количество,300200879_,negative_quantity_preserved,-5
+transactions,270,Количество,300200466_,negative_quantity_preserved,-15
+transactions,271,Количество,300200784_,negative_quantity_preserved,-36
+transactions,272,Количество,300200785_,negative_quantity_preserved,-10
+transactions,273,Количество,300200787_,negative_quantity_preserved,-20
+transactions,274,Количество,300200798_,negative_quantity_preserved,-5
+transactions,275,Количество,300200801_,negative_quantity_preserved,-20
+transactions,276,Количество,300200839_,negative_quantity_preserved,-10
+transactions,277,Количество,300200847_,negative_quantity_preserved,-10
+transactions,278,Количество,300200848_,negative_quantity_preserved,-7
+transactions,279,Количество,300200921_,negative_quantity_preserved,-11
+transactions,280,Количество,300200851_,negative_quantity_preserved,-10
+transactions,281,Количество,300200296_,negative_quantity_preserved,-2
+transactions,282,Количество,300200293_,negative_quantity_preserved,-1
+transactions,283,Количество,300200295_,negative_quantity_preserved,-2
+transactions,284,Количество,300200303_,negative_quantity_preserved,-3
+transactions,285,Количество,300200856_,negative_quantity_preserved,-50
+transactions,286,Количество,300200856_,negative_quantity_preserved,-25
+transactions,287,Количество,300200863_,negative_quantity_preserved,-1
+transactions,288,Количество,300200813_,negative_quantity_preserved,-10
+transactions,289,Количество,300200558_,negative_quantity_preserved,-11
+transactions,290,Количество,300200303_,negative_quantity_preserved,-1
+transactions,291,Количество,300200856_,negative_quantity_preserved,-2
+transactions,292,Количество,300200857_,negative_quantity_preserved,-3
+transactions,293,Количество,300200859_,negative_quantity_preserved,-4
+transactions,294,Количество,300200868_,negative_quantity_preserved,-15
+transactions,295,Количество,300200869_,negative_quantity_preserved,-2
+transactions,296,Количество,300200871_,negative_quantity_preserved,-1
+transactions,297,Количество,300200767_,negative_quantity_preserved,-2
+transactions,298,Количество,300200333_,negative_quantity_preserved,-3
+transactions,299,Количество,300200304_,negative_quantity_preserved,-29
+transactions,61602,Количество,300200296_,negative_quantity_preserved,-10
+transactions,61603,Количество,300200286_,negative_quantity_preserved,-6
+transactions,61604,Количество,300200303_,negative_quantity_preserved,-26
+transactions,62286,Количество,300200452_,negative_quantity_preserved,-1

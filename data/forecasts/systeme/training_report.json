@@ -1,0 +1,142 @@
+{
+  "supplier_id": "SYSTEME",
+  "as_of": "2026-09-23",
+  "winner": "mean_3",
+  "validation_scores": {
+    "boosting_poisson": 0.3101728394960347,
+    "boosting_squared": 0.35437055580653964,
+    "mean_3": 0.30662402974809155,
+    "seasonal_12": 0.33738877516033533
+  },
+  "selection_metric": "mean validation WAPE across known units; equal unit weights",
+  "splits": {
+    "test": {
+      "rows": 655,
+      "start": "2026-07-01",
+      "end": "2026-08-01"
+    },
+    "train": {
+      "rows": 6415,
+      "start": "2024-04-01",
+      "end": "2025-12-01"
+    },
+    "validation": {
+      "rows": 1861,
+      "start": "2026-01-01",
+      "end": "2026-06-01"
+    }
+  },
+  "coverage": [
+    {
+      "month": "2026-01-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 310,
+      "evaluated_rows": 307
+    },
+    {
+      "month": "2026-02-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 316,
+      "evaluated_rows": 315
+    },
+    {
+      "month": "2026-03-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 288,
+      "evaluated_rows": 283
+    },
+    {
+      "month": "2026-04-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 321,
+      "evaluated_rows": 319
+    },
+    {
+      "month": "2026-05-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 312,
+      "evaluated_rows": 308
+    },
+    {
+      "month": "2026-06-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 332,
+      "evaluated_rows": 329
+    },
+    {
+      "month": "2026-07-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 324,
+      "evaluated_rows": 321
+    },
+    {
+      "month": "2026-08-01",
+      "catalog_rows": 724,
+      "known_nonnegative_targets": 339,
+      "evaluated_rows": 334
+    }
+  ],
+  "training_rows": 8931,
+  "forecast_products": 724,
+  "products_with_forecast": 516,
+  "max_iter": 160,
+  "test_diagnostics": [
+    {
+      "model": "boosting_poisson",
+      "rows": 655,
+      "positive_actual_rows": 655,
+      "median_ape": 0.5234060079925124,
+      "share_within_20pct": 0.21374045801526717
+    },
+    {
+      "model": "boosting_squared",
+      "rows": 655,
+      "positive_actual_rows": 655,
+      "median_ape": 0.5214196021354482,
+      "share_within_20pct": 0.2198473282442748
+    },
+    {
+      "model": "mean_3",
+      "rows": 655,
+      "positive_actual_rows": 655,
+      "median_ape": 0.5,
+      "share_within_20pct": 0.2015267175572519
+    },
+    {
+      "model": "seasonal_12",
+      "rows": 655,
+      "positive_actual_rows": 655,
+      "median_ape": 0.6666666666666666,
+      "share_within_20pct": 0.13282442748091602
+    }
+  ],
+  "stock_features_enabled": false,
+  "prepared_file_hashes": {
+    "in_transit.csv": "2e16c0dd7ad370b3c51e5cba2834f7ad081db1ff36e11d33a43717984822a179",
+    "free_stock.csv": "5728a6fe2c8e92a4c405e09ce1fae055673d5df68d328a32b66d99f4d97aa40e",
+    "prediction_features.csv": "37bc833fe47bda338721785af43ddccf8c4303bc47fd4ca542007ea96791bbec",
+    "monthly_panel.csv": "0c4b0ceee362ac0d7b1a9a4fc06d8a1b690e23fde1d2218a6dcdfae3f43d3775",
+    "training_data.csv": "003c32794c00b13a4b510db94085eb8eca48ed5873b9c9f199e5402f96bd2d32",
+    "purchase_constraints.csv": "f9f17cf77e3e7f24327c1588cff8d2ae8f03a7feba70c53617db100ab8e9ca3c",
+    "products.csv": "fbf3bc8321265cb8cf1242e0e94e0c7c348e17f4c107f5d1cce9f17738a1c490",
+    "transactions.csv": "37b89934ad8fb26c9d9482e60056cc4f98beedb5ed6d0fe4334df37e1a9b985d",
+    "provided_seasonality.csv": "0d20c7228e36b52019df22b8dc5731a4fe224e4cb7a98ecc97f8e66e9eea707a",
+    "reconciliation.csv": "9f9a76446a13c45f85f51340518ce61dea663b9e721e4449b8274dea76411ab9",
+    "quality_issues.csv": "fc47a661b33d87f1d9886daf5e6bd0807a0ea0e62cf2e229a07e010d2d0c2704",
+    "monthly_stock.csv": "9ffd8ec246314fb848503c2790f097af076fb44b9818ac2ce6296be164bb5392"
+  },
+  "warnings": [
+    "Кратность не является отдельным MOQ. Неизвестный минимум не заменяется единицей.",
+    "Пустые и отрицательные продажи сохранены; в цели используются только известные неотрицательные значения.",
+    "Месячные остатки сохранены, но исключены из признаков до уточнения момента снимка.",
+    "Год ETA без года взят из даты файла и явно помечен как предположение.",
+    "Склад и пересчёт единиц свободного остатка/поставок не подтверждены.",
+    "Готовая сезонность не включена в исторические признаки.",
+    "Срок поставки, период проверки и сервис Systeme не подтверждены; параметры IEK не перенесены.",
+    "Тест помесячный: перед прогнозом августа известен июль.",
+    "Метрики относятся только к известным неотрицательным продажам с достаточной историей.",
+    "Сентябрь прогнозируется целиком по истории до августа. Это не остаток спроса с 23 сентября.",
+    "Нет расчёта 35-дневного горизонта, страхового запаса и заказа. Параметры IEK не использованы.",
+    "Модель не подключена к backend."
+  ]
+}

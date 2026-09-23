@@ -101,7 +101,7 @@ def read_matrix(path, kind, catalog, issues):
     records, seen = [], {}
     with table(path, "Номенклатура.Код") as (headers, rows):
         ci, ni = headers.index("номенклатура.код"), headers.index("номенклатура")
-        ui = headers.index("ед.") if "ед." in headers else None
+        ui = next((headers.index(name) for name in ("ед.", "ед.изм") if name in headers), None)
         months = {i: pd.Timestamp(parse_month(h)) for i, h in enumerate(headers) if parse_month(h)}
         if not months or len(set(months.values())) != len(months):
             raise ValueError(f"{path.name}: месяцы отсутствуют или повторяются")

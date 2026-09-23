@@ -1,0 +1,103 @@
+{
+  "supplier_id": "SYSTEME",
+  "as_of": "2026-09-23",
+  "data_cutoff_exclusive": "2026-09-23",
+  "prediction_month": "2026-09-01",
+  "policies": {
+    "blank_sales": "missing",
+    "negative_sales": "missing",
+    "min_history": 3
+  },
+  "feature_columns": [
+    "sku",
+    "unit",
+    "month_number",
+    "days_in_month",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_6",
+    "lag_12",
+    "mean_3",
+    "mean_6",
+    "std_6",
+    "observations_3",
+    "observations_6",
+    "missing_share_6",
+    "zero_share_6",
+    "history_observed_months",
+    "history_calendar_months",
+    "opening_stock_lag_1"
+  ],
+  "target_column": "target_qty",
+  "time_column": "target_month",
+  "group_column": "sku",
+  "splits": {
+    "test": {
+      "rows": 655,
+      "start": "2026-07-01",
+      "end": "2026-08-01"
+    },
+    "train": {
+      "rows": 6415,
+      "start": "2024-04-01",
+      "end": "2025-12-01"
+    },
+    "validation": {
+      "rows": 1861,
+      "start": "2026-01-01",
+      "end": "2026-06-01"
+    }
+  },
+  "counts": {
+    "products": 724,
+    "monthly_rows": 23892,
+    "training_rows": 8931,
+    "transactions": 77312,
+    "constraints": 554,
+    "transit_rows": 497,
+    "positive_transit_rows": 7,
+    "stock_snapshot_rows": 497,
+    "prediction_with_sufficient_history": 516,
+    "comparable_sku_months": 6711,
+    "mismatched_sku_months": 4198
+  },
+  "issues": {
+    "negative_quantity_preserved": 625
+  },
+  "warnings": [
+    "Кратность не является отдельным MOQ. Неизвестный минимум не заменяется единицей.",
+    "Пустые и отрицательные продажи сохранены; в цели используются только известные неотрицательные значения.",
+    "Месячные остатки сохранены, но исключены из признаков до уточнения момента снимка.",
+    "Год ETA без года взят из даты файла и явно помечен как предположение.",
+    "Склад и пересчёт единиц свободного остатка/поставок не подтверждены.",
+    "Готовая сезонность не включена в исторические признаки.",
+    "Срок поставки, период проверки и сервис Systeme не подтверждены; параметры IEK не перенесены."
+  ],
+  "sources": {
+    "sales": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/Systeme electric/Ежемесячные продажи в кол-м выражении SystemElectric 2024-2026.xlsx",
+      "sha256": "f7782ab9ea5c06d68526543953c6fce7ca83a80d1c1a4e8d88fd083de415f9d0"
+    },
+    "stock": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/Systeme electric/Ежемесячные остатки SystemElectric 2024-2026.xlsx",
+      "sha256": "45d55eb244966ef9fdba1aa09c666e9dbc4c0b05c1088f4041edcd86b908c85e"
+    },
+    "transactions": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/Systeme electric/Динамика продаж_Syseme Electric_2025-2026.xlsx",
+      "sha256": "5ca3997c13f1f65d73db5141122b92deab64f1029bf9b43fd3dd7ade65151128"
+    },
+    "moq": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/Systeme electric/MOQ SystemElectric.xlsx",
+      "sha256": "4fc809ecf9c0a73d97f13f7a16e7dbb20425ab97a6b2d9a0f6be0bbe1a326a7b"
+    },
+    "transit": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/Systeme electric/Товар в пути_SystemElectric на 22.09.2026.xlsx",
+      "sha256": "17aa50b7697aba5598997b1b4bba9de3950169bc81e97fd10c4d8b0348bd9a3d"
+    },
+    "seasonality": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/Systeme electric/Сезонность SystemElectric 2024-2026.xlsx",
+      "sha256": "19bdbc1c2331d3643e39294f68f11f7427f625107e8b025f6663bb559af669ab"
+    }
+  }
+}

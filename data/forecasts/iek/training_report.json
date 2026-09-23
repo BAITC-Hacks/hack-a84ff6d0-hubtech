@@ -1,0 +1,170 @@
+{
+  "supplier_id": "IEK",
+  "as_of": "2026-09-23",
+  "winner": "boosting_squared",
+  "selection_metric": "mean validation WAPE across known units; equal unit weights",
+  "validation_scores": {
+    "boosting_poisson": 0.5302466098045128,
+    "boosting_squared": 0.5217396613758086,
+    "mean_3": 0.5632430020991008,
+    "seasonal_12": 0.7589487761003224
+  },
+  "splits": {
+    "test": {
+      "rows": 2110,
+      "start": "2026-07-01",
+      "end": "2026-08-01"
+    },
+    "train": {
+      "rows": 20907,
+      "start": "2024-04-01",
+      "end": "2025-12-01"
+    },
+    "validation": {
+      "rows": 5962,
+      "start": "2026-01-01",
+      "end": "2026-06-01"
+    }
+  },
+  "coverage": [
+    {
+      "month": "2026-01-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 996,
+      "evaluated_rows": 950
+    },
+    {
+      "month": "2026-02-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 1089,
+      "evaluated_rows": 1038
+    },
+    {
+      "month": "2026-03-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 963,
+      "evaluated_rows": 926
+    },
+    {
+      "month": "2026-04-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 1083,
+      "evaluated_rows": 1038
+    },
+    {
+      "month": "2026-05-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 1003,
+      "evaluated_rows": 965
+    },
+    {
+      "month": "2026-06-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 1111,
+      "evaluated_rows": 1045
+    },
+    {
+      "month": "2026-07-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 1108,
+      "evaluated_rows": 1039
+    },
+    {
+      "month": "2026-08-01",
+      "catalog_rows": 3183,
+      "known_nonnegative_targets": 1111,
+      "evaluated_rows": 1071
+    }
+  ],
+  "training_rows": 28979,
+  "forecast_products": 3183,
+  "products_with_forecast": 1898,
+  "model_features": [
+    "lag_1_relative",
+    "lag_2_relative",
+    "lag_3_relative",
+    "lag_6_relative",
+    "lag_12_relative",
+    "mean_3_relative",
+    "mean_6_relative",
+    "std_6_relative",
+    "opening_stock_lag_1_relative",
+    "log_scale",
+    "days_in_month",
+    "observations_3",
+    "observations_6",
+    "missing_share_6",
+    "zero_share_6",
+    "history_observed_months",
+    "history_calendar_months",
+    "month_sin",
+    "month_cos",
+    "trend_ratio",
+    "unit_шт",
+    "unit_м",
+    "unit_упак",
+    "unit_компл",
+    "unit_unknown"
+  ],
+  "sklearn_version": "1.7.2",
+  "numpy_version": "2.5.3",
+  "pandas_version": "2.3.3",
+  "forecast_horizon_days": 35,
+  "configuration": {
+    "supplier_id": "IEK",
+    "as_of": "2026-09-23",
+    "warehouse": "Алматы",
+    "lead_time_days": 21,
+    "review_period_days": 14,
+    "service_level": 0.95,
+    "parameters_confirmed": true,
+    "confirmation_source": "Пользователь подтвердил warehouse, lead_time_days, review_period_days и service_level в задаче",
+    "blank_sales": "missing",
+    "negative_sales": "missing",
+    "sales_semantics_confirmed": false,
+    "stock_max_age_days": 1,
+    "transit_max_age_days": 7
+  },
+  "preparation_report_sha256": "2fbca135f6141f6b92cf183fcb1613cae190b94460787860cacfe7813e092672",
+  "hyperparameters": {
+    "max_iter": 160,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 30,
+    "learning_rate": 0.06,
+    "l2_regularization": 10,
+    "early_stopping": false,
+    "random_state": 42
+  },
+  "prepared_file_hashes": {
+    "in_transit.csv": "cc19a21ea17a47c2079ea7d553242661900c03e5e877b215b8c8b8d1fa81a2e0",
+    "moq.csv": "d9ecbff3b34a15d9924020635458ff1897109fd2e775fc7b9301d203776b5e63",
+    "prediction_features.csv": "f88ba9cd530be25d899bbafeddb4a0c806c374cfc798edab2d1e5f5e2652ac3a",
+    "monthly_panel.csv": "403284b202d1c67fb245b5e1cdee0af2f3d692159c06ce3827bc7caedcdeb214",
+    "training_data.csv": "0c90c9bee24cfbc4a698c3c227a16f4eb9b22e825430eb545fc1765adec9d5d6",
+    "products.csv": "a080f0c873ee383557c0f85ea432a8294b6df1761eaa189880070218afacec07",
+    "transactions.csv": "bd101c6299883de739a22d5418208e14d0650fa8b3711209f2bbe24d5df00a38",
+    "provided_seasonality.csv": "63f1ff31efb6013d1d0a483298d5ec221481c31ee42dc4ebf0fa62bcf0b2ff6c",
+    "reconciliation.csv": "99deabc774afaa9b06e3dda373ac2fc480937eb96f142e78d22befc9f3dc864a",
+    "quality_issues.csv": "2a47ec823ed05bd8caf5f53b8c343a4c3e91cd5ff19c8f2d31fdbb1bc8cdfafa"
+  },
+  "warnings": [
+    "Метрики относятся к известным неотрицательным продажам с достаточной историей. Неизвестный спрос не оценён; возможна систематическая ошибка отбора.",
+    "Из-за неизвестных пропусков нельзя надёжно оценить качество на месяцах без продаж или частоту нулевого спроса.",
+    "Проверка помесячная: перед каждым месяцем обучение расширяется только прошлым; июль становится доступен для прогноза августа.",
+    "Метрики по единицам: количества метров, штук и упаковок не складываются. Bias > 0 означает завышение.",
+    "Прогноз 35 дней приближённый: равномерное распределение внутри месяца и рекурсивный следующий месяц; такой горизонт отдельно не проверен.",
+    "Фактические продажи неполного сентября не используются. Октябрьские лаги включают прогноз сентября.",
+    "Страховой запас и сервис 95% этим обучением не подтверждены; месячные ошибки нельзя считать ошибками 35-дневного прогноза.",
+    "Это прогноз зарегистрированных продаж, а не восстановленный спрос с учётом stockout. Оптовые выбросы не удалены.",
+    "Нет текущих свободных остатков и подтверждённой кратности/пересчёта единиц; рекомендованный заказ ещё не рассчитан.",
+    "Готовая внешняя сезонность, MOQ, путь и будущие остатки не используются для обучения.",
+    "Systeme Electric не обрабатывается. Backend продолжает использовать существующий алгоритм до явного подключения новой модели."
+  ],
+  "model_hashes": {
+    "boosting_squared.pkl": "76a3491ace9fc67d68e3ea96a84133937c6604455ec5035541f17b00d9aa9c4e",
+    "selected_model.pkl": "76a3491ace9fc67d68e3ea96a84133937c6604455ec5035541f17b00d9aa9c4e",
+    "boosting_poisson.pkl": "87f6262848a307eb949aeb02e2479b91c7414be1a89b68f98ab24707a72e8afd",
+    "mean_3.pkl": "092a9f49722da6f3e7bf042b3c37334f03134848316b0a1c5dc2d9da65c44af7",
+    "seasonal_12.pkl": "28a4055142bb60913b7a4bbfb632886b7fc03f46183df83b80f642868794d918"
+  }
+}
