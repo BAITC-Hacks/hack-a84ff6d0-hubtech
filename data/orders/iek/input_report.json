@@ -1,0 +1,81 @@
+{
+  "configuration": {
+    "supplier_id": "IEK",
+    "as_of": "2026-09-23",
+    "warehouse": "Алматы",
+    "lead_time_days": 21,
+    "review_period_days": 14,
+    "service_level": 0.95,
+    "parameters_confirmed": true,
+    "confirmation_source": "Пользователь подтвердил warehouse, lead_time_days, review_period_days и service_level в задаче",
+    "blank_sales": "missing",
+    "negative_sales": "missing",
+    "sales_semantics_confirmed": false,
+    "stock_max_age_days": 1,
+    "transit_max_age_days": 7
+  },
+  "horizon_days": 35,
+  "horizon_start": "2026-09-23",
+  "horizon_end_exclusive": "2026-10-28",
+  "products": 3183,
+  "status_counts": {
+    "incomplete": 3183
+  },
+  "missing_field_counts": {
+    "sales_history": 731,
+    "current_free_stock": 3183,
+    "min_order_qty": 1261,
+    "pack_size": 3183,
+    "purchase_unit_conversion": 3183,
+    "in_transit": 869,
+    "stock_unit": 330
+  },
+  "current_stock_statuses": {
+    "missing": 3183
+  },
+  "products_by_unit": {
+    "шт": 2603,
+    "unknown": 330,
+    "м": 153,
+    "упак": 96,
+    "компл": 1
+  },
+  "receipt_rows": 306,
+  "seasonality_months": 12,
+  "notes": [
+    "Это проверенный снимок входов; прогноз, страховой запас и заказ рассчитываются на следующем этапе.",
+    "Исторический начальный остаток не считается текущим свободным остатком; неизвестное не заменяется нулём.",
+    "Для товара в каталоге актуального файла пути отсутствие строк поставки означает отсутствие зарегистрированных поступлений в этом отчёте.",
+    "ETA «поступление до» трактуется как крайняя плановая дата, а не подтверждённое фактическое поступление.",
+    "Готовая сезонность сохранена отдельно; её использование в прогнозе требует проверки на истории без утечки будущего.",
+    "Минимум отгрузки IEK не доказывает кратность упаковки или равенство закупочной и складской единиц.",
+    "Точность прогноза и возможность восстановления упущенного спроса этим отчётом не подтверждаются."
+  ],
+  "sources": {
+    "sales": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/IEK/Ежемесячные продажи в количественном выражении за последние 2 года.xlsx",
+      "sha256": "048a0af940370153511769396570259a1bb28da63709d9b974f99c45081fa255"
+    },
+    "stock": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/IEK/Ежемесячные остатки продукции за последние 2 года  ИЭК.xlsx",
+      "sha256": "ad8a8df9cbb242a3df60a147fb4011b146ca7cdd9e98c1247b1b19fd517f4a30"
+    },
+    "transactions": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/IEK/Динамика продаж_2025-2026.xlsx",
+      "sha256": "7b0100a662eba816fd2e6a477ba56ca2a7846d3489ce1083821c94333ac30e4c"
+    },
+    "moq": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/IEK/MOQ  ИЭК.xlsx",
+      "sha256": "4705b5bbbaa7c55541a151f146270bcbdc72a4ce28686fdb3378575733c4a446"
+    },
+    "transit": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/IEK/Путь ИЭК 22.09.2026.xlsx",
+      "sha256": "751fd3c2cbdfabe32f9c20c7f0289135273f007471f39101f03f9c6e1231ce7d"
+    },
+    "seasonality": {
+      "path": "/home/hubtech/Документы/alish/hack-a84ff6d0-hubtech/IEK/Сезонность ИЭК.xlsx",
+      "sha256": "d4d9a8f208884c5197d0dcea0eb60d3972e9382cb3530675d0760fe9a8339635"
+    }
+  },
+  "additional_sources": {}
+}
