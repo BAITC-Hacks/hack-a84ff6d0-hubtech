@@ -1,14 +1,7 @@
-"""MH #4 — выявление и исключение разовых крупных заказов (опт одному клиенту).
-
-Регулярную потребность нельзя считать по «сырым» продажам: единичный оптовый
-отгруз одному клиенту раздувает средний спрос. Здесь такие транзакции
-детектируются устойчивым (robust) методом и исключаются из ряда регулярного
-спроса. Возвращаем очищенные транзакции и статистику исключений — для
-объяснимости.
-"""
+"""Detect unusually large customer/day or document orders with sample protection."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
@@ -16,35 +9,40 @@ import pandas as pd
 
 @dataclass
 class OutlierResult:
-    regular: pd.DataFrame       # транзакции регулярного спроса
-    excluded_units: float       # сколько единиц исключено
-    excluded_orders: int        # сколько транзакций исключено
+    regular: pd.DataFrame
+    excluded_units: float
+    excluded_orders: int
+    excluded: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
 def exclude_bulk_orders(tx: pd.DataFrame) -> OutlierResult:
-    """Отсекает аномально крупные разовые продажи.
+    """Use real document IDs, otherwise real client/day, otherwise individual rows.
 
-    Критерий (комбинированный, устойчив к выбросам):
-      * qty выше верхней границы Тьюки Q3 + 3*IQR (экстремальный выброс), И
-      * qty >= 8x медианы (защита от ложных срабатываний на обычной вариации).
-    Дополнительно ловим концентрацию: одна транзакция, покрывающая >40% всего
-    объёма по артикулу, всегда считается разовой оптовой.
+    At least five positive order observations are required. A large share of an
+    otherwise tiny sample is not evidence of a one-off bulk order.
     """
     if tx.empty:
         return OutlierResult(tx.copy(), 0.0, 0)
-
-    qty = tx["qty"].to_numpy(dtype=float)
-    total = qty.sum()
-    median = np.median(qty)
-    q1, q3 = np.percentile(qty, [25, 75])
-    iqr = q3 - q1
-    upper_fence = q3 + 3.0 * iqr
-
-    is_extreme = (qty > upper_fence) & (qty >= 8.0 * max(median, 1.0))
-    is_concentrated = qty > 0.40 * total if total > 0 else np.zeros_like(qty, bool)
-    is_bulk = is_extreme | is_concentrated
-
-    regular = tx.loc[~is_bulk].copy()
-    excluded_units = float(qty[is_bulk].sum())
-    excluded_orders = int(is_bulk.sum())
-    return OutlierResult(regular, excluded_units, excluded_orders)
+    work = tx.reset_index(drop=True).copy()
+    day = pd.to_datetime(work["date"]).dt.strftime("%Y-%m-%d")
+    keys = pd.Series([f"row:{i}" for i in range(len(work))], index=work.index)
+    for column in ("client_id", "order_id", "document_id", "order_document", "document"):
+        if column not in work:
+            continue
+        values = work[column].fillna("").astype(str).str.strip()
+        present = values.ne("") & ~values.isin(["nan", "None", "<NA>"])
+        keys.loc[present] = column + ":" + day.loc[present] + ":" + values.loc[present]
+    positive = work["qty"].clip(lower=0.0)
+    quantities = positive.groupby(keys).sum()
+    quantities = quantities[quantities > 0]
+    if len(quantities) < 5:
+        return OutlierResult(work, 0.0, 0)
+    median = float(quantities.median())
+    q1, q3 = np.percentile(quantities, [25, 75])
+    extreme = (quantities > q3 + 3.0 * (q3 - q1)) & (quantities >= 8.0 * max(median, 1e-9))
+    bulk_keys = quantities.index[extreme]
+    # Returns are not classified as positive bulk demand.
+    bulk = keys.isin(bulk_keys) & (work["qty"] > 0)
+    excluded = work.loc[bulk].copy()
+    excluded["_bulk_order_key"] = keys.loc[bulk]
+    return OutlierResult(work.loc[~bulk].copy(), float(excluded["qty"].sum()), len(bulk_keys), excluded)

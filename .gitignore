@@ -4,7 +4,8 @@ __pycache__/
 *.pyc
 backend/.env
 backend/data_1c/
-
+backend/.cache/
+template/
 # Node / Vite
 frontend/node_modules/
 frontend/dist/

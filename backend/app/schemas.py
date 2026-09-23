@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ---------- Входные доменные объекты (то, что даёт 1С / синтетика) ----------
@@ -70,12 +70,18 @@ class Rationale(BaseModel):
     excluded_bulk_units: float
     excluded_bulk_orders: int
     raw_need: float
+    ignored_in_transit: float = 0.0
+    stock_as_of: Optional[date] = None
 
 
 class OrderLine(BaseModel):
+    line_id: str = ""
     sku: str
+    supplier_sku: Optional[str] = None
     name: str
     category: str
+    warehouse: Optional[str] = None
+    unit: str = "ед."
     supplier_id: str
     supplier_name: str
     recommended_qty: float
@@ -83,6 +89,9 @@ class OrderLine(BaseModel):
     days_of_cover: float
     rationale: Rationale
     explanation: str        # человекочитаемое обоснование (LLM или шаблон)
+    pack_size: float = 1.0
+    min_order_qty: float = 0.0
+    warnings: List[str] = Field(default_factory=list)
 
 
 class SupplierGroup(BaseModel):
@@ -94,7 +103,12 @@ class SupplierGroup(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
+    calculation_id: str = ""
     generated_at: str
+    as_of: Optional[date] = None
+    data_source: str = "synthetic"
+    warnings: List[str] = Field(default_factory=list)
+    data_quality: dict[str, Any] = Field(default_factory=dict)
     warehouse: Optional[str] = None
     category: Optional[str] = None
     service_level: float
@@ -111,3 +125,21 @@ class RecommendRequest(BaseModel):
     service_level: Optional[float] = Field(default=None, ge=0.5, le=0.999)
     review_period_days: Optional[int] = Field(default=None, ge=1, le=120)
     explain: bool = Field(default=True, description="Генерировать LLM-обоснования")
+
+
+class ExportLine(BaseModel):
+    """Решение менеджера по строке сохранённого расчёта."""
+
+    model_config = ConfigDict(extra="forbid")
+    line_id: str = Field(min_length=1, max_length=1024)
+    quantity: float = Field(ge=0, allow_inf_nan=False, strict=True)
+    approved: bool = Field(default=False, strict=True)
+
+
+class ExportRequest(BaseModel):
+    """Экспортирует снимок расчёта и правки, не выполняя новый прогноз."""
+
+    model_config = ConfigDict(extra="forbid")
+    calculation_id: str = Field(min_length=1, max_length=64)
+    lines: List[ExportLine] = Field(min_length=1, max_length=100000)
+    approved_only: bool = Field(default=False, strict=True)

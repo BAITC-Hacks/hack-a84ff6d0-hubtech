@@ -10,7 +10,7 @@ import copy
 import pandas as pd
 
 from app.core.recommend import generate_recommendations
-from app.data.adapter import get_data_source
+from app.data.synthetic import SyntheticDataSource
 
 
 def _line_index(resp):
@@ -23,7 +23,7 @@ def _line_index(resp):
 
 
 def main() -> None:
-    ds = get_data_source().load()
+    ds = SyntheticDataSource().load()
     base = generate_recommendations(ds, explain=False)
     base_lines = _line_index(base)
     results: list[tuple[str, bool, str]] = []
