@@ -17,7 +17,8 @@ import pandas as pd
 
 from app.config import get_settings
 from app.core.explain import build_explanation
-from app.core.forecasting import forecast_demand, forecast_monthly_demand
+from app.core.forecasting import Forecast, forecast_demand, forecast_monthly_demand
+from app.core.ml_client import fetch_forecasts
 from app.core.outliers import exclude_bulk_orders
 from app.core.replenishment import compute_need
 from app.core.stockout import build_adjusted_series
@@ -103,6 +104,28 @@ def generate_recommendations(
     reconciliation = {"matched_sku_months": 0, "mismatched_sku_months": 0,
                       "bulk_units_not_deducted_due_to_mismatch": 0.0}
 
+    # Прогноз ML имеет ключ поставщик–SKU, без склада. Не размножаем общий
+    # объём на несколько складов и не используем реальные модели на synthetic.
+    warehouses_by_sku = {}
+    for sku, wh in keys:
+        warehouses_by_sku.setdefault(sku, set()).add(wh)
+    ml_requested = settings.ml_api_enabled and source == "excel"
+    ml_predictions, ml_warnings = {}, []
+    if ml_requested:
+        requests = {}
+        for sku, wh in sorted(keys):
+            info = catalog.get(sku, {})
+            supplier = smap["link"].get(sku, {}).get("supplier_id", info.get("supplier_id"))
+            if (supplier not in {"IEK", "SYSTEME"} or len(warehouses_by_sku[sku]) != 1
+                    or (warehouse and wh != warehouse)
+                    or (category and info.get("category") != category)):
+                continue
+            requests.setdefault(supplier, []).append(str(sku))
+        if requests:
+            ml_predictions, ml_warnings = fetch_forecasts(requests, today, settings)
+            response_warnings.extend(ml_warnings)
+    ml_usage = {"enabled": ml_requested, "used": 0, "fallback": 0}
+
     for sku, wh in sorted(keys, key=lambda key: (str(key[0]), str(key[1]))):
         if warehouse and wh != warehouse:
             continue
@@ -174,6 +197,35 @@ def generate_recommendations(
         if factors:
             warnings.append("Сезонность взята из таблицы поставщика и нормирована к среднегодовому уровню.")
 
+        ml_result = None
+        unit = _clean_text(info.get("unit", "ед."), "ед.")
+        if ml_requested and supplier_id in {"IEK", "SYSTEME"}:
+            candidate = ml_predictions.get((supplier_id, str(sku)))
+            reason = "ML API недоступен для этой позиции"
+            if len(warehouses_by_sku[sku]) != 1:
+                reason = "ML-прогноз не разделён по складам"
+            elif candidate is not None:
+                item, batch = candidate
+                reason = f"ML: {item.status}"
+                if item.status == "forecast" and item.unit != unit:
+                    reason = "единица ML-прогноза не совпадает с единицей товара"
+                elif item.status == "forecast":
+                    ml_result = batch
+                    days_in_month = pd.Timestamp(batch.forecast_month).days_in_month
+                    daily_rate = item.predicted_qty / days_in_month
+                    # Сезонность и тренд уже входят в результат модели. Повторное
+                    # применение Excel-коэффициентов завысило бы месячный объём.
+                    fc = Forecast(daily_rate, max(math.sqrt(daily_rate), fc.sigma_daily),
+                                  1.0, 1.0, daily_rate)
+                    excluded_units, excluded_orders, uplift = 0.0, 0, 0.0
+                    warnings = [w for w in warnings if not w.startswith("Сезонность взята")]
+                    warnings.append("Использована обученная ML-модель; её прогноз не корректируется повторно на опт, stockout, сезонность или тренд. Коэффициенты 1 в раскладке означают отсутствие дополнительных поправок.")
+                    warnings.append("Горизонт приближённо рассчитан как прогноз полного месяца / дни месяца × дни горизонта. Постоянная суточная скорость переносится и на следующий месяц; этот горизонт отдельно не проверен. Страховой запас — эвристика backend, а не оценка ошибки ML.")
+                    ml_usage["used"] += 1
+            if ml_result is None:
+                ml_usage["fallback"] += 1
+                warnings.append(f"Использован прежний алгоритм backend: {reason}. Это не прогноз обученной ML-модели.")
+
         stock_rows = stock_groups.get((sku, wh), empty)
         stock_as_of = None
         if not stock_rows.empty and "as_of" in stock_rows:
@@ -222,6 +274,11 @@ def generate_recommendations(
             stock_as_of=stock_as_of, lost_demand_uplift=round(uplift, 2),
             excluded_bulk_units=round(excluded_units, 2), excluded_bulk_orders=excluded_orders,
             raw_need=need.raw_need,
+            forecast_source="ml_api" if ml_result is not None else "legacy",
+            forecast_model=ml_result.model if ml_result is not None else None,
+            forecast_model_version=ml_result.model_version if ml_result is not None else None,
+            forecast_month=ml_result.forecast_month if ml_result is not None else None,
+            forecast_monthly_qty=item.predicted_qty if ml_result is not None else None,
         )
         unit = _clean_text(info.get("unit", "ед."), "ед.")
         explanation = build_explanation(name, rationale, need.recommended_qty, need.urgency, use_llm=explain, unit=unit)
@@ -246,13 +303,15 @@ def generate_recommendations(
             total_units=round(sum(line.recommended_qty for line in lines), 4), lines=lines,
         ))
     groups.sort(key=lambda group: -group.total_units)
+    if ml_usage["used"]:
+        response_warnings.append("Для строк forecast_source=ml_api использована модель на месячных количествах: пропуски и отрицательные продажи не заменялись нулями, опт не вычитался, скрытый спрос не восстанавливался. Допущения импорта backend относятся к его данным и резервному расчёту.")
     if reconciliation["mismatched_sku_months"]:
         response_warnings.append("Обнаружены расхождения объёмов между транзакциями и месячными отчётами. Месячные итоги сохранены; исключение крупных заказов выполнено только для согласованных месяцев.")
     return RecommendationResponse(
         calculation_id=uuid4().hex,
         generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         as_of=today, data_source=source, warnings=response_warnings,
-        data_quality={**metadata, "calculation_reconciliation": reconciliation}, warehouse=warehouse, category=category,
+        data_quality={**metadata, "calculation_reconciliation": reconciliation, "ml_api": ml_usage}, warehouse=warehouse, category=category,
         service_level=service_level, review_period_days=review_period_days,
         sku_count=sum(len(group.lines) for group in groups), groups=groups,
     )

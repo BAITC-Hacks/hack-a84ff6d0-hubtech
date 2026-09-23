@@ -30,6 +30,12 @@ class Settings:
         if min(self.iek_lead_time_days, self.systeme_lead_time_days) < 0:
             raise ValueError("Срок поставки не может быть отрицательным")
 
+        self.ml_api_enabled = os.getenv("ML_API_ENABLED", "true").strip().lower() in {"1", "true", "yes"}
+        self.ml_api_url = os.getenv("ML_API_URL", "http://127.0.0.1:8020").strip().rstrip("/")
+        self.ml_api_timeout = float(os.getenv("ML_API_TIMEOUT", "10"))
+        if self.ml_api_timeout <= 0:
+            raise ValueError("ML_API_TIMEOUT должен быть положительным")
+
         # Параметры пополнения по умолчанию
         self.service_level: float = float(os.getenv("SERVICE_LEVEL", "0.95"))
         self.review_period_days: int = int(os.getenv("REVIEW_PERIOD_DAYS", "14"))

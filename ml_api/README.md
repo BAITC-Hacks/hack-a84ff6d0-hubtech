@@ -264,3 +264,72 @@ for item in result["items"]:
 ```bash
 .venv-ml/bin/python -m unittest discover -s ml_api/tests -v
 ```
+
+
+## Подключение к существующему backend
+
+Подключение реализовано в `backend/app/core/ml_client.py` и
+`backend/app/core/recommend.py`. Существующий `POST /api/recommend` запрашивает
+ML-прогнозы пакетами по 500 кодов у каждого поставщика. Frontend продолжает
+обращаться к тому же backend-эндпоинту.
+
+В `backend/.env` доступны настройки (эти значения используются по умолчанию):
+
+```dotenv
+ML_API_ENABLED=true
+ML_API_URL=http://127.0.0.1:8020
+ML_API_TIMEOUT=10
+```
+
+Интеграция применяется к `DATA_SOURCE=excel`. Синтетические данные и CSV
+сохраняют прежний алгоритм. Для запуска нужны два процесса и отдельные
+окружения: версии pandas/numpy backend и обучения отличаются.
+Из корня проекта:
+
+```bash
+# Терминал 1: модели
+.venv-ml/bin/uvicorn ml_api.app:app --host 127.0.0.1 --port 8020
+```
+
+```bash
+# Терминал 2: backend (создать окружение, если его ещё нет)
+python3 -m venv backend/.venv
+backend/.venv/bin/python -m pip install -r backend/requirements.txt
+backend/.venv/bin/uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8017
+```
+
+```bash
+curl -sS http://127.0.0.1:8017/api/recommend \
+  -H 'Content-Type: application/json' \
+  -d '{"explain": false}'
+```
+
+У строк результата поле `rationale.forecast_source` равно `ml_api` или `legacy`.
+Для ML также возвращаются `forecast_model`, `forecast_model_version`,
+`forecast_month`, `forecast_monthly_qty`. В `data_quality.ml_api` находятся
+счётчики использования и резервного расчёта до фильтрации строк без заказа.
+
+**Пересчёт горизонта:** `avg_daily_demand = predicted_qty / days_in_month`,
+затем существующий расчёт использует `avg_daily_demand × (lead_time + review)`.
+Это приближение с постоянной суточной скоростью, в том числе после перехода
+в следующий месяц. Это не отдельный ML-прогноз следующего месяца или проверенный
+35/49-дневный прогноз. Предупреждение включено в каждую ML-строку.
+
+Страховой запас остаётся эвристикой backend: для дневного sigma берётся максимум
+его прежней оценки и `sqrt(avg_daily_demand)`. Это не ошибка ML-модели и не
+подтверждение заданного уровня сервиса. MOQ, кратность, остатки, поставки и
+сортировка продолжают обрабатываться backend. Месячный ML-прогноз повторно
+не корректируется на сезонность, тренд, опт или stockout; в раскладке
+дополнительные коэффициенты равны 1, исключённый объём и uplift равны 0.
+
+При недоступности ML, неподходящей дате снимка, неизвестном коде, короткой
+истории, разных единицах или нескольких складах одного SKU используется
+`legacy` с явным предупреждением. `null` не превращается в нулевой спрос.
+Нулевой числовой ML-прогноз применяется как нулевой. Дата снимка ML должна
+совпадать с датой расчёта backend; при обновлении данных перезапускайте ML-сервис.
+
+Проверить интеграцию:
+
+```bash
+PYTHONPATH=backend backend/.venv/bin/python -m unittest tests.test_ml_integration -v
+```

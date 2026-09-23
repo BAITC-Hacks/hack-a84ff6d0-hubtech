@@ -72,6 +72,11 @@ class Rationale(BaseModel):
     raw_need: float
     ignored_in_transit: float = 0.0
     stock_as_of: Optional[date] = None
+    forecast_source: str = "legacy"
+    forecast_model: Optional[str] = None
+    forecast_model_version: Optional[str] = None
+    forecast_month: Optional[date] = None
+    forecast_monthly_qty: Optional[float] = None
 
 
 class OrderLine(BaseModel):
