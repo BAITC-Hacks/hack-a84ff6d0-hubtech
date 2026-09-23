@@ -18,3 +18,7 @@ frontend/dist/
 # Spreadsheet editor locks are not source data.
 .~lock.*#
 ~$*.xlsx
+HackAlem AI_ Автоматизация формирования заказов поставщикам.docx.pdf
+
+# Критерии оценки — только локально, в GitHub-репозиторий не попадают
+критерии/
