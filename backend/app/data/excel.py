@@ -287,6 +287,18 @@ class _Importer:
                 sku = normalize_code(_value(row, code_col))
                 if not sku:
                     continue
+                name = normalize_text(_value(row, name_col))
+                article = normalize_text(_value(row, article_col))
+                # Two non-product marker rows in the IEK transit report use
+                # codes 0/1 with no name or quantities. Keep real products with
+                # those codes: neither a numeric-only filter nor a blanket ban.
+                note = (supplier_id == "IEK" and not name
+                        and ((sku == "0" and article.casefold().startswith("расширение "))
+                             or (sku == "1" and article == "1"))
+                        and all(parse_number(_value(row, col)) in (None, 0) for col, _ in dates))
+                if note:
+                    self.counts["ignored_transit_note_rows"] += 1
+                    continue
                 category = normalize_text(_value(row, category_col))
                 self.product(supplier_id, sku, _value(row, name_col), supplier_sku=_value(row, article_col),
                              category=f"Категория {category}" if category else None)
@@ -423,4 +435,10 @@ class ExcelDataSource:
             raise ValueError("Не найдены исходные Excel-файлы: " + ", ".join(missing))
         fingerprints = tuple((str(path), path.stat().st_mtime_ns, path.stat().st_size) for path in paths)
         # Recommendation filters and detection flags must not mutate cached frames.
-        return deepcopy(_cached_load(str(self.root), fingerprints, self.as_of, self.lead_times))
+        dataset = deepcopy(_cached_load(str(self.root), fingerprints, self.as_of, self.lead_times))
+        # Enrichment is outside the workbook cache: a changed/missing JSON file
+        # must immediately change coverage without rebuilding the XLSX dataset.
+        from app.config import get_settings
+        from app.data.enrichment import enrich_catalog
+        settings = get_settings()
+        return enrich_catalog(dataset, settings.ekt_catalog_path, enabled=settings.ekt_catalog_enabled)

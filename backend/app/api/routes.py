@@ -39,6 +39,7 @@ def meta() -> dict:
     return {
         "warehouses": sorted(ds.sales["warehouse"].dropna().unique().tolist()),
         "categories": sorted(catalog["category"].dropna().unique().tolist()),
+        "product_categories": sorted(catalog["product_category"].dropna().loc[lambda s: s.ne("")].unique().tolist()) if "product_category" in catalog else [],
         "suppliers": ds.suppliers.to_dict("records"),
         "sku_count": int(catalog["sku"].nunique()),
         "data_source": ds.source,
@@ -55,6 +56,7 @@ def recommend(req: RecommendRequest) -> RecommendationResponse:
         ds,
         warehouse=req.warehouse,
         category=req.category,
+        product_category=req.product_category,
         service_level=req.service_level,
         review_period_days=req.review_period_days,
         explain=req.explain,

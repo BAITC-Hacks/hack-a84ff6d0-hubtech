@@ -177,6 +177,25 @@ class ExcelImportTest(unittest.TestCase):
         with patch.dict(os.environ, {"DATA_SOURCE": "excel", "DATA_DIR": ".", "DATA_AS_OF": ""}):
             self.assertEqual(Path(Settings().data_dir), PROJECT_ROOT)
 
+    def test_skip_only_confirmed_iek_transit_notes_preserving_real_codes(self):
+        spec = SUPPLIER_FILES["IEK"]
+        write_fixture(self.root / spec["folder"] / spec["transit"], [
+            ["Код 1с", "Артикул ИЭК", "Наименование", "поступление до 30.09.2026"],
+            [0, "Расширение 3кв 24"], [1, 1, None],
+            ["0", "REAL-0", "Настоящий товар с кодом 0", 2],
+            ["1", "REAL-1", "Настоящий товар с кодом 1", 3],
+            ["00123_", "ARTICLE", "Товар с ведущими нулями", 4],
+            ["BR-AK20-1-K35_", "ARTICLE-2", "Товар с буквенным кодом", 5],
+        ])
+        data = ExcelDataSource(self.root).load()
+        self.assertEqual(data.metadata["counts"]["ignored_transit_note_rows"], 2)
+        catalog = data.catalog.set_index("sku")
+        self.assertEqual(catalog.loc["0", "supplier_sku"], "REAL-0")
+        self.assertEqual(catalog.loc["1", "supplier_sku"], "REAL-1")
+        self.assertIn("00123_", catalog.index)
+        self.assertIn("BR-AK20-1-K35_", catalog.index)
+        self.assertEqual(data.in_transit[data.in_transit.sku == "0"].qty.sum(), 2)
+
     @unittest.skipUnless(os.getenv("RUN_REAL_EXCEL_TESTS") == "1", "Set RUN_REAL_EXCEL_TESTS=1 for partner workbook smoke test")
     def test_partner_workbooks(self):
         data = ExcelDataSource(PROJECT_ROOT).load()
@@ -187,6 +206,9 @@ class ExcelImportTest(unittest.TestCase):
         self.assertEqual(len(data.seasonality), 24)
         self.assertFalse(data.catalog.sku.duplicated().any())
         self.assertTrue(data.stockouts.empty)
+        self.assertNotIn("0", set(data.catalog.sku))
+        self.assertNotIn("1", set(data.catalog.sku))
+        self.assertEqual(data.metadata["counts"]["ignored_transit_note_rows"], 2)
 
 
 if __name__ == "__main__":

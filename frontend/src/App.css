@@ -49,6 +49,7 @@ header .sub {
   color: var(--text);
   font-size: 13px;
 }
+.filter-coverage { max-width: 240px; color: var(--warn); font-size: 11px; line-height: 1.5; }
 
 button {
   cursor: pointer;
@@ -193,6 +194,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 }
 .data-info p { margin: 0; color: var(--muted); }
 .data-info strong { color: var(--text); }
+.catalog-info { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.catalog-info p + p { margin-top: 4px; }
 .data-info details { margin-top: 8px; }
 .data-info summary { color: var(--warn); cursor: pointer; }
 .data-info ul, .line-warnings { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
@@ -214,12 +217,24 @@ button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-v
 .table-scroll table { min-width: 860px; }
 .line-meta, .line-warning, .quantity-rule, .quantity-error { display: block; margin-top: 5px; font-size: 11px; }
 .line-meta, .quantity-rule { color: var(--muted); }
+.line-category { display: block; margin-top: 5px; color: var(--text); font-size: 11px; line-height: 1.4; }
 .line-warning { color: var(--warn); }
 .quantity-cell { min-width: 140px; }
 .quantity-error { max-width: 200px; }
 .qty-invalid { border-color: var(--danger); }
 .badge { white-space: nowrap; }
 .line-warnings { font-size: 12px; line-height: 1.5; }
+.product-reference { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.product-reference-head { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; }
+.product-reference h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.product-reference h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; }
+.product-reference a { color: var(--accent); font-size: 12px; text-underline-offset: 3px; }
+.product-reference a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.product-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 24px; margin: 12px 0; }
+.product-details > div { display: flex; flex-direction: column; gap: 3px; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.product-details dt { color: var(--muted); }
+.product-details dd { margin: 0; color: var(--text); }
+.product-reference-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .pagination { display: flex; gap: 12px; align-items: center; padding: 12px 16px; flex-wrap: wrap; }
 .pagination span { font-size: 12px; color: var(--muted); }
 .pagination span:first-child { margin-right: auto; }

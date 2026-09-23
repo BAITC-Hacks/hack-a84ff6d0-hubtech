@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchMeta, recommend, exportExcel } from './api'
-import { buildExportPayload, getQuantity, quantityError, summarizeLines } from './orderUtils'
+import { buildExportPayload, getQuantity, quantityError, safeEktUrl, summarizeLines } from './orderUtils'
 import './App.css'
 
 const PAGE_SIZE = 50
@@ -27,17 +27,66 @@ function fmtDate(value) {
 
 function DataInfo({ data }) {
   if (!data) return null
-  const source = { excel: 'Excel-выгрузки поставщиков', synthetic: 'Демонстрационные данные', csv: 'CSV-таблицы' }[data.data_source] || 'Данные сервиса'
+  const source = { excel: 'Excel-выгрузки 1С', synthetic: 'Демонстрационные данные', csv: 'CSV-таблицы' }[data.data_source] || 'Данные сервиса'
   const warnings = [...new Set(data.warnings || [])]
+  const enrichment = data.data_quality?.catalog_enrichment
+  const hasCoverage = Number.isFinite(enrichment?.matched) && Number.isFinite(enrichment?.total_catalog)
   return (
     <section className="data-info" aria-label="Источник данных">
-      <p><strong>{source}</strong> · Дата расчёта: {fmtDate(data.as_of)}</p>
+      <p>Основные данные для расчёта: <strong>{source}</strong> · Дата расчёта: {fmtDate(data.as_of)}</p>
+      <div className="catalog-info">
+        <p><strong>Справочник ekt.kz:</strong> {hasCoverage
+          ? `сопоставлено ${fmt(enrichment.matched)} из ${fmt(enrichment.total_catalog)} товаров.`
+          : 'сведения пока недоступны.'}
+          {enrichment?.fetched_at && ` Каталог собран: ${fmtDate(enrichment.fetched_at)}.`}
+        </p>
+        <p>{enrichment?.matched > 0
+          ? 'Товарные группы и характеристики помогают проверить позицию. Продажи, остатки и условия заказа берутся из основных данных.'
+          : 'Расчёт и экспорт доступны по основным данным. Товарные группы и характеристики появятся после сопоставления со справочником.'}
+        </p>
+        {enrichment?.conflicts > 0 && <p>Неоднозначных совпадений: {fmt(enrichment.conflicts)}. Справочные данные для них не используются.</p>}
+        {enrichment?.crawl_quarantined > 0 && <p>При сборе справочника исключено товаров с противоречивыми данными: {fmt(enrichment.crawl_quarantined)}.</p>}
+      </div>
       {warnings.length > 0 && (
         <details>
           <summary>Ограничения данных и допущения ({warnings.length})</summary>
           <ul>{warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
         </details>
       )}
+    </section>
+  )
+}
+
+function ProductReference({ line }) {
+  const productUrl = safeEktUrl(line.product_url)
+  const attributes = Object.entries(line.product_attributes || {})
+    .filter(([name, value]) => name.trim() && typeof value === 'string' && value.trim())
+  const hasReference = Boolean(line.product_category || line.product_subcategory || line.product_brand || productUrl || attributes.length)
+  return (
+    <section className="product-reference" aria-label={`Справочные данные ${line.sku}`}>
+      <div className="product-reference-head">
+        <h3>Сведения о товаре</h3>
+        {productUrl && <a href={productUrl} target="_blank" rel="noopener noreferrer">Карточка на ekt.kz<span className="sr-only"> — откроется в новой вкладке</span></a>}
+      </div>
+      <dl className="product-details">
+        <div><dt>Категория 1С</dt><dd>{line.category || 'Не указана'}</dd></div>
+        {line.product_category && <div><dt>Товарная группа</dt><dd>{line.product_category}</dd></div>}
+        {line.product_subcategory && <div><dt>Подгруппа</dt><dd>{line.product_subcategory}</dd></div>}
+        {line.product_brand && <div><dt>Бренд</dt><dd>{line.product_brand}</dd></div>}
+        {line.supplier_sku && <div><dt>Артикул производителя</dt><dd>{line.supplier_sku}</dd></div>}
+      </dl>
+      {attributes.length > 0 && (
+        <>
+          <h4>Характеристики из справочника ekt.kz</h4>
+          <dl className="product-details product-attributes">
+            {attributes.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}
+          </dl>
+        </>
+      )}
+      {attributes.length === 0 && <p className="product-reference-note">Характеристики для этой позиции пока не загружены.</p>}
+      <p className="product-reference-note">{hasReference
+        ? `Сведения справочника ekt.kz · дата: ${fmtDate(line.catalog_fetched_at)}.`
+        : 'Сведения справочника ekt.kz для этого артикула пока не найдены.'}</p>
     </section>
   )
 }
@@ -60,6 +109,7 @@ function Line({ line, qty, onQty, approved, onApprove, disabled }) {
         <td>
           {line.name}
           <span className="line-meta">{line.warehouse || 'Склад не указан'} · {line.unit || 'ед.'}</span>
+          {line.product_category && <span className="line-category">{line.product_category}{line.product_subcategory ? ` / ${line.product_subcategory}` : ''}</span>}
           {line.warnings?.length > 0 && <span className="line-warning">Есть ограничения данных — см. обоснование</span>}
         </td>
         <td><span className={`badge ${u.cls}`}>{u.label}</span></td>
@@ -100,6 +150,7 @@ function Line({ line, qty, onQty, approved, onApprove, disabled }) {
                 )}
               </div>
               {line.warnings?.length > 0 && <ul className="line-warnings">{line.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
+              <ProductReference line={line} />
             </div>
           </td>
         </tr>
@@ -157,6 +208,7 @@ export default function App() {
   const [meta, setMeta] = useState(null)
   const [warehouse, setWarehouse] = useState('')
   const [category, setCategory] = useState('')
+  const [productCategory, setProductCategory] = useState('')
   const [serviceLevel, setServiceLevel] = useState(0.95)
   const [reviewPeriod, setReviewPeriod] = useState(14)
   const [explain, setExplain] = useState(false)
@@ -179,6 +231,7 @@ export default function App() {
   const params = {
     warehouse: warehouse || null,
     category: category || null,
+    product_category: productCategory || null,
     service_level: Number(serviceLevel),
     review_period_days: Number(reviewPeriod),
     explain,
@@ -254,11 +307,24 @@ export default function App() {
             {meta?.warehouses.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
         </label>
-        <label>Категория
+        <label>Категория 1С
           <select value={category} onChange={(event) => setCategory(event.target.value)}>
             <option value="">Все</option>
             {meta?.categories.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
+        </label>
+        <label>Товарная группа
+          <select aria-label="Товарная группа" value={productCategory} onChange={(event) => setProductCategory(event.target.value)}
+            disabled={!meta?.product_categories?.length}
+            aria-describedby={productCategory && meta?.data_quality?.catalog_enrichment?.unmatched > 0 ? 'product-category-coverage' : undefined}>
+            <option value="">Все</option>
+            {meta?.product_categories?.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          {productCategory && meta?.data_quality?.catalog_enrichment?.unmatched > 0 && (
+            <span className="filter-coverage" id="product-category-coverage" role="status">
+              Фильтр по товарной группе охватывает только сопоставленные товары. Для расчёта по всему учётному каталогу выберите «Все».
+            </span>
+          )}
         </label>
         <label>Уровень сервиса
           <select value={serviceLevel} onChange={(event) => setServiceLevel(event.target.value)}>
@@ -280,7 +346,7 @@ export default function App() {
       {result && (
         <>
           <section className="result-context" aria-label="Параметры отображённого расчёта">
-            <p>Текущий расчёт: <strong>{calculatedParams.warehouse || 'все склады'}</strong> · {calculatedParams.category || 'все категории'} · сервис {fmt(calculatedParams.service_level * 100)}% · период проверки {calculatedParams.review_period_days} дн · дата расчёта {fmtDate(result.as_of)}</p>
+            <p>Текущий расчёт: <strong>{calculatedParams.warehouse || 'все склады'}</strong> · категория 1С: {calculatedParams.category || 'все'} · товарная группа: {calculatedParams.product_category || 'все'} · сервис {fmt(calculatedParams.service_level * 100)}% · период проверки {calculatedParams.review_period_days} дн · дата расчёта {fmtDate(result.as_of)}</p>
             {pendingSettings && <p className="pending" role="status">Параметры изменены. Нажмите «Рассчитать заказ», чтобы применить их. Экспорт использует текущий расчёт и ваши правки.</p>}
           </section>
           <section className="summary" aria-label="Итоги заказа">

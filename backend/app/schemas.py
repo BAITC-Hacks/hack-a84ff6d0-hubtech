@@ -80,6 +80,12 @@ class OrderLine(BaseModel):
     supplier_sku: Optional[str] = None
     name: str
     category: str
+    product_category: Optional[str] = None
+    product_subcategory: Optional[str] = None
+    product_brand: Optional[str] = None
+    product_url: Optional[str] = None
+    product_attributes: dict[str, str] = Field(default_factory=dict)
+    catalog_fetched_at: Optional[str] = None
     warehouse: Optional[str] = None
     unit: str = "ед."
     supplier_id: str
@@ -111,6 +117,7 @@ class RecommendationResponse(BaseModel):
     data_quality: dict[str, Any] = Field(default_factory=dict)
     warehouse: Optional[str] = None
     category: Optional[str] = None
+    product_category: Optional[str] = None
     service_level: float
     review_period_days: int
     sku_count: int
@@ -122,6 +129,7 @@ class RecommendationResponse(BaseModel):
 class RecommendRequest(BaseModel):
     warehouse: Optional[str] = Field(default=None, description="Фильтр по складу")
     category: Optional[str] = Field(default=None, description="Фильтр по категории")
+    product_category: Optional[str] = Field(default=None, description="Товарная группа из справочника ekt.kz; отдельно от категории 1С")
     service_level: Optional[float] = Field(default=None, ge=0.5, le=0.999)
     review_period_days: Optional[int] = Field(default=None, ge=1, le=120)
     explain: bool = Field(default=True, description="Генерировать LLM-обоснования")

@@ -55,7 +55,8 @@ class CsvDataSource:
 
     def _read(self, name: str, parse_dates: list[str] | None = None) -> pd.DataFrame:
         path = os.path.join(self.data_dir, name)
-        return pd.read_csv(path, parse_dates=parse_dates or [])
+        identifiers = ("sku", "supplier_id", "client_id", "order_id", "supplier_sku", "warehouse")
+        return pd.read_csv(path, parse_dates=parse_dates or [], dtype={column: "string" for column in identifiers})
 
     def load(self) -> Dataset:
         return Dataset(

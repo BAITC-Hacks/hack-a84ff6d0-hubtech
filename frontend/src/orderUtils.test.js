@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildExportPayload, getQuantity, quantityError, summarizeLines } from './orderUtils.js'
+import { buildExportPayload, getQuantity, quantityError, safeEktUrl, summarizeLines } from './orderUtils.js'
 
 const line = { line_id: 'supplier1:sku:warehouse1', sku: 'same-sku', recommended_qty: 12, pack_size: 6, min_order_qty: 12, urgency: 'high' }
 const otherLine = { ...line, line_id: 'supplier2:sku:warehouse2', recommended_qty: 18, urgency: 'low' }
 const result = { calculation_id: 'saved-calculation', groups: [{ lines: [line, otherLine] }] }
+
+test('catalog links only allow HTTPS on the exact ekt.kz host without credentials', () => {
+  assert.equal(safeEktUrl('https://ekt.kz/catalog/item-001/'), 'https://ekt.kz/catalog/item-001/')
+  for (const value of [undefined, null, '', '/catalog/001', 'http://ekt.kz/001', 'javascript:alert(1)',
+    'https://ekt.kz.example.com/001', 'https://example.com/001', 'https://www.ekt.kz/001',
+    'https://ekt.kz@evil.example/001', 'https://user:password@ekt.kz/001', 'https://ekt.kz:8443/001']) {
+    assert.equal(safeEktUrl(value), null, String(value))
+  }
+})
 
 test('same SKU in different suppliers or warehouses keeps independent edits and approval', () => {
   const payload = buildExportPayload(result, { [line.line_id]: '24' }, { [otherLine.line_id]: true }, true)

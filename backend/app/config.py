@@ -24,6 +24,9 @@ class Settings:
         self.data_dir = str(data_dir if data_dir.is_absolute() else PROJECT_ROOT / data_dir)
         configured_date = os.getenv("DATA_AS_OF", "").strip()
         self.data_as_of = date.fromisoformat(configured_date) if configured_date else None
+        self.ekt_catalog_enabled = os.getenv("EKT_CATALOG_ENABLED", "true").strip().lower() not in {"false", "0", "no", "off"}
+        catalog_path = Path(os.getenv("EKT_CATALOG_PATH", "data/ekt/catalog.json").strip()).expanduser()
+        self.ekt_catalog_path = str(catalog_path if catalog_path.is_absolute() else PROJECT_ROOT / catalog_path)
         # Допущения до подтверждения поставщиками, явно показаны в метаданных.
         self.iek_lead_time_days = int(os.getenv("IEK_LEAD_TIME_DAYS", "21"))
         self.systeme_lead_time_days = int(os.getenv("SYSTEME_LEAD_TIME_DAYS", "35"))

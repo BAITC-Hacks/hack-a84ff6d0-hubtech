@@ -54,6 +54,7 @@ def generate_recommendations(
     ds: Dataset, warehouse: Optional[str] = None, category: Optional[str] = None,
     service_level: Optional[float] = None, review_period_days: Optional[int] = None,
     explain: bool = True,
+    product_category: Optional[str] = None,
 ) -> RecommendationResponse:
     settings = get_settings()
     service_level = settings.service_level if service_level is None else service_level
@@ -68,6 +69,11 @@ def generate_recommendations(
         history_end = min(history_end, source_end.date())
     complete_month_cutoff = pd.Timestamp(history_end + timedelta(days=1)).replace(day=1)
     response_warnings = list(getattr(ds, "warnings", []))
+    if product_category and metadata.get("catalog_enrichment", {}).get("unmatched", 0):
+        response_warnings.append(
+            "Фильтр товарной группы охватывает только сопоставленные позиции ekt.kz. "
+            "Для расчёта по всему учётному каталогу выберите все товарные группы."
+        )
     if (today - history_end).days > 1:
         response_warnings.append(f"Последний подтверждённый день истории: {history_end.isoformat()}. Период после него не считается нулевыми продажами.")
     smap = _supplier_map(ds)
@@ -112,6 +118,9 @@ def generate_recommendations(
         name = _clean_text(info.get("name", tx_info.get("name", sku)), str(sku))
         cat = _clean_text(info.get("category", tx_info.get("category", "Без категории")), "Без категории")
         if category and cat != category:
+            continue
+        product_cat = _clean_text(info.get("product_category"))
+        if product_category and product_cat != product_category:
             continue
         warnings: list[str] = []
         link = smap["link"].get(sku, {})
@@ -228,6 +237,12 @@ def generate_recommendations(
         line = OrderLine(
             line_id=f"{sku}::{wh}", sku=str(sku), supplier_sku=_clean_text(info.get("supplier_sku")) or None,
             name=name, category=cat, warehouse=str(wh), supplier_id=supplier_id,
+            product_category=product_cat or None,
+            product_subcategory=_clean_text(info.get("product_subcategory")) or None,
+            product_brand=_clean_text(info.get("product_brand")) or None,
+            product_url=_clean_text(info.get("product_url")) or None,
+            product_attributes=info.get("product_attributes") if isinstance(info.get("product_attributes"), dict) else {},
+            catalog_fetched_at=_clean_text(info.get("catalog_fetched_at")) or None,
             supplier_name=sup.get("name", "—"), unit=unit,
             pack_size=pack_size, min_order_qty=min_oq, recommended_qty=need.recommended_qty,
             urgency=need.urgency, days_of_cover=need.days_of_cover,
@@ -253,6 +268,7 @@ def generate_recommendations(
         generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
         as_of=today, data_source=source, warnings=response_warnings,
         data_quality={**metadata, "calculation_reconciliation": reconciliation}, warehouse=warehouse, category=category,
+        product_category=product_category,
         service_level=service_level, review_period_days=review_period_days,
         sku_count=sum(len(group.lines) for group in groups), groups=groups,
     )

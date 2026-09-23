@@ -2,6 +2,17 @@ export function getQuantity(line, edits) {
   return edits[line.line_id] ?? line.recommended_qty
 }
 
+export function safeEktUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'https:' || url.hostname !== 'ekt.kz' || url.port || url.username || url.password) return null
+    return url.href
+  } catch {
+    return null
+  }
+}
+
 export function quantityError(line, rawQuantity) {
   if (rawQuantity === '' || String(rawQuantity).trim() === '') return 'Введите количество или 0, чтобы исключить позицию.'
   const quantity = Number(rawQuantity)
