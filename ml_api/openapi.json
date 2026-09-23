@@ -1,0 +1,589 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Supplier Demand ML API",
+    "description": "Прогноз продаж за полный месяц в единице товара. IEK и Systeme Electric.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Доступность моделей",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "summary": "Модели и поддерживаемый месяц",
+        "operationId": "models_v1_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/forecast": {
+      "post": {
+        "summary": "Прогноз по кодам товаров одного поставщика",
+        "operationId": "forecast_v1_forecast_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForecastRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Модель недоступна",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Невалидный запрос или неподдерживаемый месяц",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 Forecast V1 Forecast Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DecompositionExplanation": {
+        "properties": {
+          "level_qty": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Level Qty"
+          },
+          "seasonal_factor": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Seasonal Factor"
+          },
+          "trend_per_month": {
+            "type": "number",
+            "title": "Trend Per Month",
+            "description": "Уже учитывает damping; повторно умножать не нужно"
+          },
+          "months_from_level_anchor": {
+            "type": "number",
+            "title": "Months From Level Anchor"
+          },
+          "trend_contribution_qty": {
+            "type": "number",
+            "title": "Trend Contribution Qty"
+          },
+          "damping": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Damping"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "level_qty",
+          "seasonal_factor",
+          "trend_per_month",
+          "months_from_level_anchor",
+          "trend_contribution_qty",
+          "damping"
+        ],
+        "title": "DecompositionExplanation"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "model_unavailable",
+              "unsupported_month"
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "ForecastItem": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "title": "Sku"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "forecast",
+              "insufficient_history",
+              "unknown_sku"
+            ],
+            "title": "Status"
+          },
+          "predicted_qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Qty"
+          },
+          "history_observed_months": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History Observed Months"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecompositionExplanation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku",
+          "unit",
+          "status",
+          "predicted_qty",
+          "history_observed_months"
+        ],
+        "title": "ForecastItem"
+      },
+      "ForecastRequest": {
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "enum": [
+              "IEK",
+              "SYSTEME"
+            ],
+            "title": "Supplier Id"
+          },
+          "forecast_month": {
+            "type": "string",
+            "format": "date",
+            "title": "Forecast Month",
+            "description": "Первый день полного прогнозного месяца: YYYY-MM-01"
+          },
+          "skus": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Skus",
+            "description": "Уникальные коды 1С, включая ведущие нули и суффиксы"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "forecast_month",
+          "skus"
+        ],
+        "title": "ForecastRequest"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "enum": [
+              "IEK",
+              "SYSTEME"
+            ],
+            "title": "Supplier Id"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "Data As Of"
+          },
+          "forecast_month": {
+            "type": "string",
+            "format": "date",
+            "title": "Forecast Month"
+          },
+          "trained_before": {
+            "type": "string",
+            "format": "date",
+            "title": "Trained Before",
+            "description": "Исключительная граница истории обучения"
+          },
+          "forecast_scope": {
+            "type": "string",
+            "const": "full_month",
+            "title": "Forecast Scope",
+            "default": "full_month"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "model",
+          "model_version",
+          "data_as_of",
+          "forecast_month",
+          "trained_before",
+          "items"
+        ],
+        "title": "ForecastResponse"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "models": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "ready",
+                "unavailable"
+              ]
+            },
+            "propertyNames": {
+              "enum": [
+                "IEK",
+                "SYSTEME"
+              ]
+            },
+            "type": "object",
+            "title": "Models"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "models"
+        ],
+        "title": "HealthResponse"
+      },
+      "ModelInfo": {
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "enum": [
+              "IEK",
+              "SYSTEME"
+            ],
+            "title": "Supplier Id"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "data_as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data As Of"
+          },
+          "forecast_month": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Month"
+          },
+          "trained_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trained Before"
+          },
+          "sku_count": {
+            "type": "integer",
+            "title": "Sku Count",
+            "default": 0
+          },
+          "forecast_available": {
+            "type": "integer",
+            "title": "Forecast Available",
+            "default": 0
+          },
+          "min_history": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min History"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "available"
+        ],
+        "title": "ModelInfo"
+      },
+      "ModelsResponse": {
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelInfo"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "models"
+        ],
+        "title": "ModelsResponse"
+      },
+      "ValidationErrorResponse": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ValidationErrorResponse"
+      },
+      "ValidationIssue": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Loc"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ctx"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationIssue",
+        "description": "Стандартная ошибка проверки запроса FastAPI/Pydantic."
+      }
+    }
+  }
+}
