@@ -14,4 +14,4 @@ frontend/dist/
 .DS_Store
 
 # Generated ML datasets (rebuild from IEK spreadsheets)
-/data/ml/
+# /data/ml/
